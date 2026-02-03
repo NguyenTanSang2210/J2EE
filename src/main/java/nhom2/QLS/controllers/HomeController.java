@@ -1,13 +1,12 @@
 package nhom2.QLS.controllers;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-
+import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
+@RequestMapping("/")
 public class HomeController {
-    
-    @GetMapping("/")
+    @GetMapping
     public String home() {
-        return "redirect:/books";
+        return "home/index";
     }
 }
