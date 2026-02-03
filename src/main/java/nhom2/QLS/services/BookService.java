@@ -21,7 +21,7 @@ public class BookService {
                                   Integer pageSize,
                                   String sortBy) {
 
-        return bookRepository.findAllBooks(pageNo, pageSize, sortBy);
+        return bookRepository.findAll(PageRequest.of(pageNo, pageSize, Sort.by(sortBy))).getContent();
     }
     public Optional<Book> getBookById(Long id) {
         return bookRepository.findById(id);
@@ -41,5 +41,9 @@ public class BookService {
     }
     public void deleteBookById(Long id) {
         bookRepository.deleteById(id);
+    }
+
+    public List<Book> searchBook(String keyword) {
+        return bookRepository.searchBook(keyword);
     }
 }
