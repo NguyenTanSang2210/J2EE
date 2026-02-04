@@ -29,6 +29,11 @@ public class Invoice {
     @Positive(message = "Total must be positive")
     private Double price;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @ToString.Exclude
+    private User user;
+
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<ItemInvoice> itemInvoices = new ArrayList<>();
