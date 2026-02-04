@@ -5,15 +5,22 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
@@ -21,6 +28,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     private final OAuthService oAuthService;
     private final UserService userService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     
     @Bean
     public UserDetailsService userDetailsService() {
@@ -33,82 +41,117 @@ public class SecurityConfig {
     }
     
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+    
+    @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         var auth = new DaoAuthenticationProvider(userService);
         auth.setPasswordEncoder(passwordEncoder());
         return auth;
     }
     @Bean
-    public SecurityFilterChain securityFilterChain(@NotNull
-                                                   HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(@NotNull HttpSecurity http) throws Exception {
         return http
+                // Disable CSRF only for REST API endpoints
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**")
+                )
+                
+                // Configure authorization
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**", "/",
-                                "/oauth/**", "/register", "/error")
-                        .permitAll()
-
-                        .requestMatchers("/books/edit/**",
-
-                                "/books/add", "/books/delete")
-                        .authenticated()
-
-                        .requestMatchers("/books", "/cart", "/cart/**")
-
-                        .authenticated()
-
-                        .requestMatchers("/api/**")
-
-                        .authenticated()
+                        // Public endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/v1/books").permitAll() // Public cho test
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/error").permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
+                        
+                        // Admin only endpoints
+                        .requestMatchers("/books/edit/**", "/books/add", "/books/delete").hasAnyAuthority("ADMIN")
+                        .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN")
+                        
+                        // User and Admin endpoints - Web UI
+                        .requestMatchers("/books", "/cart/**").hasAnyAuthority("ADMIN", "USER")
+                        
+                        // API v1 endpoints - Require JWT authentication
+                        .requestMatchers("/api/v1/**").hasAnyAuthority("ADMIN", "USER")
+                        
+                        // All other API endpoints
+                        .requestMatchers("/api/**").hasAnyAuthority("ADMIN", "USER")
+                        
+                        // All other requests require authentication
                         .anyRequest().authenticated()
-                ).logout(logout -> logout
+                )
+                
+                // Configure session management
+                // IF_REQUIRED: Create session when needed (for form login)
+                // But API requests with JWT won't create session
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(1)
+                        .expiredUrl("/login?expired")
+                )
+                
+                // Add JWT filter before UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                
+                // Configure form login (for web UI)
+                .formLogin(formLogin -> formLogin
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/login?error")
+                        .permitAll()
+                )
+                
+                // Configure OAuth2 login
+                .oauth2Login(
+                        oauth2Login -> oauth2Login
+                                .loginPage("/login")
+                                .failureUrl("/login?error")
+                                .userInfoEndpoint(userInfoEndpoint ->
+                                        userInfoEndpoint
+                                                .oidcUserService(oAuthService)
+                                )
+                                .successHandler((request, response, authentication) -> {
+                                    var principal = authentication.getPrincipal();
+                                    String email = null;
+                                    String name = null;
+                                    
+                                    if (principal instanceof org.springframework.security.oauth2.core.oidc.user.OidcUser oidcUser) {
+                                        email = oidcUser.getEmail();
+                                        name = oidcUser.getName();
+                                    } else if (principal instanceof OAuth2User oauth2User) {
+                                        email = oauth2User.getAttribute("email");
+                                        name = oauth2User.getAttribute("name");
+                                    }
+                                    
+                                    if (email != null && name != null) {
+                                        userService.saveOauthUser(email, name);
+                                    }
+                                    response.sendRedirect("/");
+                                })
+                                .permitAll()
+                )
+                
+                // Configure logout
+                .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login")
                         .deleteCookies("JSESSIONID")
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .permitAll()
-                ).formLogin(formLogin -> formLogin
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/")
-                        .failureUrl("/login?error")
-                        .permitAll()
-                ).oauth2Login(
-                        oauth2Login -> oauth2Login
-                                .loginPage("/login")
-                                .failureUrl("/login?error")
-                                .userInfoEndpoint(userInfoEndpoint ->
-                                        userInfoEndpoint
-                                                .userService(oAuthService)
-                                )
-
-                                .successHandler(
-
-                                        (request, response,
-                                         authentication) -> {
-                                            var oidcUser =
-                                                    (DefaultOidcUser) authentication.getPrincipal();
-                                            userService.saveOauthUser(oidcUser.getEmail(), oidcUser.getName());
-                                            response.sendRedirect("/");
-                                        }
-                                )
-
-                                .permitAll()
-
-                ).rememberMe(rememberMe -> rememberMe
-                        .key("hutech")
-                        .rememberMeCookieName("hutech")
-                        .tokenValiditySeconds(24 * 60 * 60)
-                        .userDetailsService(userDetailsService())
-                ).exceptionHandling(exceptionHandling ->
-                        exceptionHandling
-                                .accessDeniedPage("/403")
-                ).sessionManagement(sessionManagement ->
-                        sessionManagement
-                                .maximumSessions(1)
-                                .expiredUrl("/login")
-                ).httpBasic(httpBasic -> httpBasic
-                        .realmName("hutech")
-                ).build();
+                )
+                
+                // Configure exception handling
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling.accessDeniedPage("/403")
+                )
+                
+                // Build security filter chain
+                .build();
     }
 }

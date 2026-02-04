@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+        lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-    <meta name="viewport" content="width=device-width, initial-
-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    
     <title>My Book List</title>
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
@@ -18,7 +21,7 @@ scale=1.0">
         <div class="col-md-12">
             <nav class="navbar navbar-light">
                 <div class="container-fluid">
-                    <h2>My Book List</h2>
+                    <h1>My Book List</h1>
                     <form class="d-flex" th:action="@{/books/search}"
                           method="get">
                         <input class="form-control me-2" type="search"
@@ -38,33 +41,36 @@ scale=1.0">
             <th><a th:href="@{/books(pageNo=${currentPage}, sortBy='author')}">Author</a></th>
             <th><a th:href="@{/books(pageNo=${currentPage}, sortBy='price')}">Price</a></th>
             <th><a th:href="@{/books(pageNo=${currentPage}, sortBy='category')}">Category</a></th>
-
-            <th>Action</th>
+            <th sec:authorize="hasAnyAuthority('ADMIN', 'USER')">Action</th>
         </tr>
         </thead>
-        <tbody>
-        <tr th:each="book : ${books}">
+        <tbody id="book-table-body">
+        <tr th:each="book : ${books}" th:id="'book-' + ${book.getId()}">
             <td th:text="${book.getId()}"></td>
             <td th:text="${book.getTitle()}"></td>
             <td th:text="${book.getAuthor()}"></td>
             <td th:text="${book.getPrice()}"></td>
-            <td th:text="${book.getCategory() != null ? book.getCategory().getName() : 'N/A'}"></td>
-            <td colspan="2">
-                <a class="btn btn-primary"
+            <td th:text="${book.getCategory().getName()}"></td>
+            <td sec:authorize="hasAnyAuthority('ADMIN', 'USER')">
+                <!-- Admin only buttons -->
+                <a class="btn btn-primary btn-sm"
+                   sec:authorize="hasAnyAuthority('ADMIN')"
                    th:href="@{/books/edit/{id}(id=${book.getId()})}">Edit</a>
-                <a class="btn btn-danger"
-                   th:href="@{/books/delete/{id}(id=${book.getId()})}"
-                   onclick="return confirm('Are you sure you want to delete this book?')">Delete</a>
-
-                <form th:action="@{/books/add-to-cart}" method="post" class="d-inline">
+                <button class="btn btn-danger btn-sm"
+                        sec:authorize="hasAnyAuthority('ADMIN')"
+                        th:onclick="'apiDeleteBook(' + ${book.getId()} + '); return false;'">Delete</button>
+                
+                <!-- Add to cart for both ADMIN and USER -->
+                <form th:action="@{/books/add-to-cart}" method="post"
+                      class="d-inline">
                     <input type="hidden" name="id" th:value="${book.getId()}">
                     <input type="hidden" name="name"
                            th:value="${book.getTitle()}">
                     <input type="hidden" name="price"
                            th:value="${book.getPrice()}">
-                    <button type="submit" class="btn btn-success"
-                            onclick="return confirm('Are you sure you want to add this book to cart?')">
-                        Add to cart</button>
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-cart-plus"></i> Add to cart
+                    </button>
                 </form>
             </td>
         </tr>
@@ -74,12 +80,13 @@ scale=1.0">
 <nav aria-label="Page navigation example">
     <ul class="pagination justify-content-center pagination-sm"
         th:each="i : ${#numbers.sequence(0, totalPages)}">
-        <li class="page-item" th:classappend="${currentPage == i ? 'active' : ''}">
+        <li class="page-item" th:classappend="${currentPage == i} ?'active'">
             <a class="page-link" th:href="@{/books(pageNo=${i})}"
                th:text="${i}"></a>
         </li>
     </ul>
 </nav>
 <th:block th:replace="~{layout::footer}"></th:block>
+<script th:src="@{/js/list.js}"></script>
 </body>
 </html>

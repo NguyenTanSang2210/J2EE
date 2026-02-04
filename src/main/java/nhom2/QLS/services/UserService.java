@@ -32,25 +32,32 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-        @Transactional(isolation = Isolation.SERIALIZABLE,
-            rollbackFor = {Exception.class, Throwable.class})
-        public void Save(@NotNull User user) {
-        save(user);
-        }
-
-    public Optional<User> findByUsername(String username) throws
-            UsernameNotFoundException {
+    /**
+     * Tìm user theo username, trả về Optional
+     */
+    public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
+    /**
+     * Load user cho Spring Security authentication
+     * Implement từ UserDetailsService interface
+     */
     @Override
-    public UserDetails loadUserByUsername(String username) throws
-            UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found: " + username));
     }
 
+    /**
+     * Lưu user OAuth (Google login)
+     * - Nếu email đã tồn tại: cập nhật provider
+     * - Nếu username đã tồn tại: bỏ qua
+     * - Nếu chưa tồn tại: tạo user mới
+     */
+    @Transactional(isolation = Isolation.SERIALIZABLE,
+            rollbackFor = {Exception.class, Throwable.class})
     public void saveOauthUser(String email, @NotNull String username) {
         // Kiểm tra xem email đã tồn tại chưa
         Optional<User> existingUserByEmail = userRepository.findByEmail(email);
@@ -79,12 +86,14 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
     
-    // Set default role cho user mới đăng ký
+    /**
+     * Set default role (USER) cho user mới đăng ký
+     */
     @Transactional(isolation = Isolation.SERIALIZABLE,
             rollbackFor = {Exception.class, Throwable.class})
     public void setDefaultRole(String username) {
         userRepository.findByUsername(username).ifPresent(user -> {
-            user.getRoles().add(roleRepository.findRoleById(1L)); // Role USER có id = 1
+            user.getRoles().add(roleRepository.findRoleById(Role.USER.value));
             userRepository.save(user);
         });
     }
