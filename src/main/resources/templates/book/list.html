@@ -10,83 +10,225 @@
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     
-    <title>My Book List</title>
+    <title>Danh Sách Sách</title>
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
+    <style>
+        .star-rating { 
+            color: #ddd; 
+            font-size: 0.9em;
+            display: inline-block;
+        }
+        .star-rating .filled { 
+            color: #ffc107; 
+        }
+        .book-title-link {
+            text-decoration: none;
+            color: #0d6efd;
+            font-weight: 500;
+        }
+        .book-title-link:hover {
+            text-decoration: underline;
+            color: #0a58ca;
+        }
+    </style>
 </head>
 <body>
 <th:block th:replace="~{layout::header}"></th:block>
-<div class="container">
-    <div class="row">
+<div class="container my-4">
+    <!-- Tiêu đề -->
+    <div class="row mb-4">
         <div class="col-md-12">
-            <nav class="navbar navbar-light">
-                <div class="container-fluid">
-                    <h1>My Book List</h1>
-                    <form class="d-flex" th:action="@{/books/search}"
-                          method="get">
-                        <input class="form-control me-2" type="search"
-                               placeholder="Search" aria-label="Search" name="keyword">
-                        <button class="btn btn-outline-success"
-                                type="submit">Search</button>
+            <h1 class="mb-0"><i class="bi bi-journal-text me-2"></i>Danh Sách Sách</h1>
+            <p class="text-muted" th:if="${totalItems != null}">
+                Tìm thấy <strong th:text="${totalItems}"></strong> kết quả
+            </p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Sidebar Filter -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Lọc sách</h5>
+                </div>
+                <div class="card-body">
+                    <form action="/books/search" method="get" id="filterForm">
+                        
+                        <!-- Tìm kiếm -->
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-search me-1"></i>Từ khóa</label>
+                            <input type="text" name="keyword" class="form-control" 
+                                   th:value="${searchDTO?.keyword}"
+                                   placeholder="Tên sách hoặc tác giả...">
+                        </div>
+                        
+                        <!-- Danh mục -->
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-tag me-1"></i>Danh mục</label>
+                            <select name="categoryId" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option th:each="cat : ${categories}" 
+                                        th:value="${cat.id}"
+                                        th:text="${cat.name}"
+                                        th:selected="${searchDTO?.categoryId == cat.id}">
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <!-- Khoảng giá -->
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-currency-dollar me-1"></i>Giá từ</label>
+                            <input type="number" name="minPrice" class="form-control"
+                                   th:value="${searchDTO?.minPrice}"
+                                   placeholder="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-currency-dollar me-1"></i>Giá đến</label>
+                            <input type="number" name="maxPrice" class="form-control"
+                                   th:value="${searchDTO?.maxPrice}"
+                                   placeholder="1000000">
+                        </div>
+                        
+                        <!-- Sắp xếp -->
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-sort-down me-1"></i>Sắp xếp theo</label>
+                            <select name="sortBy" class="form-select">
+                                <option value="id" th:selected="${searchDTO?.sortBy == 'id' or searchDTO?.sortBy == null}">Mặc định</option>
+                                <option value="title" th:selected="${searchDTO?.sortBy == 'title'}">Tên sách</option>
+                                <option value="price" th:selected="${searchDTO?.sortBy == 'price'}">Giá</option>
+                                <option value="author" th:selected="${searchDTO?.sortBy == 'author'}">Tác giả</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <select name="sortDirection" class="form-select">
+                                <option value="asc" th:selected="${searchDTO?.sortDirection == 'asc' or searchDTO?.sortDirection == null}">Tăng dần</option>
+                                <option value="desc" th:selected="${searchDTO?.sortDirection == 'desc'}">Giảm dần</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-check-circle me-1"></i>Áp dụng
+                        </button>
+                        <a href="/books" class="btn btn-secondary w-100">
+                            <i class="bi bi-x-circle me-1"></i>Xóa bộ lọc
+                        </a>
                     </form>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Danh sách sách -->
+        <div class="col-md-9">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="bi bi-hash me-1"></i>ID</th>
+                            <th><i class="bi bi-book me-1"></i>Tên Sách</th>
+                            <th><i class="bi bi-person me-1"></i>Tác Giả</th>
+                            <th><i class="bi bi-currency-dollar me-1"></i>Giá</th>
+                            <th><i class="bi bi-tag me-1"></i>Danh Mục</th>
+                            <th><i class="bi bi-star me-1"></i>Đánh Giá</th>
+                            <th><i class="bi bi-box-seam me-1"></i>Tồn Kho</th>
+                            <th sec:authorize="hasAnyAuthority('ADMIN', 'USER')"><i class="bi bi-gear me-1"></i>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="book-table-body">
+                        <tr th:each="book : ${books}" th:id="'book-' + ${book.getId()}">
+                            <td th:text="${book.getId()}"></td>
+                            <td>
+                                <a th:href="@{/books/{id}(id=${book.getId()})}" 
+                                   class="book-title-link"
+                                   th:text="${book.getTitle()}"></a>
+                            </td>
+                            <td th:text="${book.getAuthor()}"></td>
+                            <td><span th:text="${#numbers.formatDecimal(book.getPrice(), 0, 'COMMA', 0, 'POINT')}"></span> đ</td>
+                            <td><span class="badge bg-info" th:text="${book.getCategory().getName()}"></span></td>
+                            <td>
+                                <div class="star-rating">
+                                    <span th:each="i : ${#numbers.sequence(1, 5)}" 
+                                          th:classappend="${i <= book.averageRating} ? 'filled' : ''">★</span>
+                                </div>
+                                <small class="text-muted">
+                                    (<span th:text="${book.totalReviews}">0</span>)
+                                </small>
+                            </td>
+                            <td>
+                                <span th:if="${book.stock > 10}" class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i><span th:text="${book.stock}"></span>
+                                </span>
+                                <span th:if="${book.stock <= 10 && book.stock > 0}" class="badge bg-warning text-dark">
+                                    <i class="bi bi-exclamation-triangle me-1"></i><span th:text="${book.stock}"></span>
+                                </span>
+                                <span th:if="${book.stock == 0}" class="badge bg-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Hết hàng
+                                </span>
+                            </td>
+                            <td sec:authorize="hasAnyAuthority('ADMIN', 'USER')">
+                                <div class="btn-group-vertical btn-group-sm" role="group">
+                                    <!-- Admin only buttons -->
+                                    <a class="btn btn-primary btn-sm mb-1"
+                                       sec:authorize="hasAnyAuthority('ADMIN')"
+                                       th:href="@{/books/edit/{id}(id=${book.getId()})}">
+                                        <i class="bi bi-pencil-square me-1"></i>Sửa
+                                    </a>
+                                    <button class="btn btn-danger btn-sm mb-1"
+                                            sec:authorize="hasAnyAuthority('ADMIN')"
+                                            th:onclick="'apiDeleteBook(' + ${book.getId()} + '); return false;'">
+                                        <i class="bi bi-trash me-1"></i>Xóa
+                                    </button>
+                                    
+                                    <!-- Add to cart for both ADMIN and USER -->
+                                    <form th:action="@{/books/add-to-cart}" method="post"
+                                          class="d-inline">
+                                        <input type="hidden" name="id" th:value="${book.getId()}">
+                                        <input type="hidden" name="name"
+                                               th:value="${book.getTitle()}">
+                                        <input type="hidden" name="price"
+                                               th:value="${book.getPrice()}">
+                                        <button type="submit" class="btn btn-success btn-sm w-100"
+                                                th:disabled="${book.stock == 0}">
+                                            <i class="bi bi-cart-plus me-1"></i>Thêm vào giỏ
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <nav aria-label="Phân trang" th:if="${totalPages > 0}">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" 
+                           th:href="@{/books/search(page=${currentPage - 1}, size=20, keyword=${searchDTO?.keyword}, categoryId=${searchDTO?.categoryId}, minPrice=${searchDTO?.minPrice}, maxPrice=${searchDTO?.maxPrice}, sortBy=${searchDTO?.sortBy}, sortDirection=${searchDTO?.sortDirection})}">
+                            Trước
+                        </a>
+                    </li>
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${currentPage == i} ? 'active'">
+                        <a class="page-link" 
+                           th:href="@{/books/search(page=${i}, size=20, keyword=${searchDTO?.keyword}, categoryId=${searchDTO?.categoryId}, minPrice=${searchDTO?.minPrice}, maxPrice=${searchDTO?.maxPrice}, sortBy=${searchDTO?.sortBy}, sortDirection=${searchDTO?.sortDirection})}"
+                           th:text="${i + 1}"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                        <a class="page-link" 
+                           th:href="@{/books/search(page=${currentPage + 1}, size=20, keyword=${searchDTO?.keyword}, categoryId=${searchDTO?.categoryId}, minPrice=${searchDTO?.minPrice}, maxPrice=${searchDTO?.maxPrice}, sortBy=${searchDTO?.sortBy}, sortDirection=${searchDTO?.sortDirection})}">
+                            Sau
+                        </a>
+                    </li>
+                </ul>
             </nav>
         </div>
     </div>
-    <table class="table">
-        <thead>
-        <tr>
-            <th><a th:href="@{/books(pageNo=${currentPage}, sortBy='id')}">Id</a></th>
-            <th><a th:href="@{/books(pageNo=${currentPage}, sortBy='title')}">Title</a></th>
-            <th><a th:href="@{/books(pageNo=${currentPage}, sortBy='author')}">Author</a></th>
-            <th><a th:href="@{/books(pageNo=${currentPage}, sortBy='price')}">Price</a></th>
-            <th><a th:href="@{/books(pageNo=${currentPage}, sortBy='category')}">Category</a></th>
-            <th sec:authorize="hasAnyAuthority('ADMIN', 'USER')">Action</th>
-        </tr>
-        </thead>
-        <tbody id="book-table-body">
-        <tr th:each="book : ${books}" th:id="'book-' + ${book.getId()}">
-            <td th:text="${book.getId()}"></td>
-            <td th:text="${book.getTitle()}"></td>
-            <td th:text="${book.getAuthor()}"></td>
-            <td th:text="${book.getPrice()}"></td>
-            <td th:text="${book.getCategory().getName()}"></td>
-            <td sec:authorize="hasAnyAuthority('ADMIN', 'USER')">
-                <!-- Admin only buttons -->
-                <a class="btn btn-primary btn-sm"
-                   sec:authorize="hasAnyAuthority('ADMIN')"
-                   th:href="@{/books/edit/{id}(id=${book.getId()})}">Edit</a>
-                <button class="btn btn-danger btn-sm"
-                        sec:authorize="hasAnyAuthority('ADMIN')"
-                        th:onclick="'apiDeleteBook(' + ${book.getId()} + '); return false;'">Delete</button>
-                
-                <!-- Add to cart for both ADMIN and USER -->
-                <form th:action="@{/books/add-to-cart}" method="post"
-                      class="d-inline">
-                    <input type="hidden" name="id" th:value="${book.getId()}">
-                    <input type="hidden" name="name"
-                           th:value="${book.getTitle()}">
-                    <input type="hidden" name="price"
-                           th:value="${book.getPrice()}">
-                    <button type="submit" class="btn btn-success btn-sm">
-                        <i class="bi bi-cart-plus"></i> Add to cart
-                    </button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
 </div>
-<nav aria-label="Page navigation example">
-    <ul class="pagination justify-content-center pagination-sm"
-        th:each="i : ${#numbers.sequence(0, totalPages)}">
-        <li class="page-item" th:classappend="${currentPage == i} ?'active'">
-            <a class="page-link" th:href="@{/books(pageNo=${i})}"
-               th:text="${i}"></a>
-        </li>
-    </ul>
-</nav>
 <th:block th:replace="~{layout::footer}"></th:block>
 <script th:src="@{/js/list.js}"></script>
+<script th:src="@{/js/filter.js}"></script>
 </body>
 </html>

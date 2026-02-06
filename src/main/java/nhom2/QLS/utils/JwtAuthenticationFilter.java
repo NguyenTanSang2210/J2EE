@@ -89,6 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private boolean isPublicEndpoint(String path) {
         return path.startsWith("/api/auth/") ||
+               path.startsWith("/api/webhooks/") || // ⭐ Skip JWT for webhooks
                path.startsWith("/css/") ||
                path.startsWith("/js/") ||
                path.startsWith("/images/") ||

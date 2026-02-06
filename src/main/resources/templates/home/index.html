@@ -3,23 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>ỨNG DỤNG QUẢN LÝ SÁCH</title>
+    <title>Trang Chủ - Ứng Dụng Quản Lý Sách</title>
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            border-radius: 20px;
+            margin: 2rem 0;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+            -webkit-text-fill-color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .hero-section p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px rgba(0,0,0,0.15);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .feature-card h3 {
+            color: #1F2937;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .feature-card p {
+            color: #6B7280;
+            margin-bottom: 0;
+        }
+    </style>
 </head>
 <body>
 <th:block th:replace="~{layout::header}"></th:block>
 <div class="container">
-    <nav class="navbar navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                TRANG CHỦ ỨNG DỤNG QUẢN LÝ SÁCH - KẾT NỐI CSDL MYSQL
-            </a>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <i class="bi bi-book-fill" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+        <h1>Hệ Thống Quản Lý Sách Hiện Đại</h1>
+        <p class="lead mb-0">Giải pháp toàn diện cho việc quản lý thư viện và bán sách trực tuyến</p>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="bi bi-speedometer2 feature-icon"></i>
+                <h3>Quản Lý Nhanh Chóng</h3>
+                <p>Thêm, sửa, xóa sách một cách dễ dàng và nhanh chóng với giao diện trực quan</p>
+            </div>
         </div>
-    </nav>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="bi bi-shield-check feature-icon"></i>
+                <h3>Bảo Mật Cao</h3>
+                <p>Hệ thống xác thực và phân quyền người dùng đảm bảo an toàn dữ liệu</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="bi bi-cart-check feature-icon"></i>
+                <h3>Giỏ Hàng Thông Minh</h3>
+                <p>Quản lý giỏ hàng và thanh toán đơn giản, tiện lợi cho người dùng</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="bi bi-search feature-icon"></i>
+                <h3>Tìm Kiếm Mạnh Mẽ</h3>
+                <p>Tìm kiếm sách theo tên, tác giả, danh mục một cách nhanh chóng và chính xác</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="bi bi-graph-up feature-icon"></i>
+                <h3>Sắp Xếp Linh Hoạt</h3>
+                <p>Sắp xếp danh sách sách theo nhiều tiêu chí khác nhau để dễ dàng quản lý</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="bi bi-database feature-icon"></i>
+                <h3>Kết Nối MySQL</h3>
+                <p>Lưu trữ dữ liệu an toàn với cơ sở dữ liệu MySQL hiệu suất cao</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="text-center my-5">
+        <div class="card" style="background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%); border: none;">
+            <div class="card-body py-5">
+                <h2 class="text-white mb-4">Bắt Đầu Ngay Hôm Nay!</h2>
+                <p class="text-white mb-4">Khám phá hệ thống quản lý sách chuyên nghiệp của chúng tôi</p>
+                <a href="/books" class="btn btn-light btn-lg me-2">
+                    <i class="bi bi-journal-text me-2"></i>Xem Danh Sách Sách
+                </a>
+                <a href="/login" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-person-circle me-2"></i>Đăng Nhập
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 <th:block th:replace="~{layout::footer}"></th:block>
 </body>

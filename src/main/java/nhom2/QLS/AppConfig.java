@@ -3,6 +3,9 @@ import nhom2.QLS.entities.Book;
 import nhom2.QLS.entities.Category;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import java.util.ArrayList;
 import java.util.List;
 @Configuration
@@ -50,5 +53,16 @@ public class AppConfig {
                 .itemInvoices(new ArrayList<>())
                 .build());
         return books;
+    }
+
+    /**
+     * WebClient Bean cho SePay API calls
+     * Dùng để gọi API SePay (lấy transactions, kiểm tra thanh toán)
+     */
+    @Bean
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder()
+                .defaultHeader(HttpHeaders.USER_AGENT, "QLS-BookStore/1.0")
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
     }
 }

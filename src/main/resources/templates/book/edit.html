@@ -3,55 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
-    <title>Edit Book</title>
+    <title>Chỉnh Sửa Sách</title>
 </head>
 <body>
 <th:block th:replace="~{layout::header}"></th:block>
 <div class="container">
-    <h1>Edit Book</h1>
-    <form th:action="@{/books/edit}" th:object="${book}" method="post">
-        <input type="hidden" th:field="*{id}">
-        <div class="col-6 mb-3">
-            <label class="form-label" for="title">Title:</label>
-            <input class="form-control" type="text" th:field="*{title}"
-                   id="title" required autofocus>
-            <span class="text-danger" th:if="${#fields.hasErrors('title')}"
-                  th:errors="*{title}"></span>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="text-center mb-4"><i class="bi bi-pencil-square me-2"></i>Chỉnh Sửa Sách</h1>
+                    <form th:action="@{/books/edit}" th:object="${book}" method="post">
+                        <input type="hidden" th:field="*{id}">
+                        <div class="mb-3">
+                            <label class="form-label" for="title">
+                                <i class="bi bi-book me-1"></i>Tên Sách:
+                            </label>
+                            <input class="form-control" type="text" th:field="*{title}"
+                                   id="title" required autofocus>
+                            <span class="text-danger" th:if="${#fields.hasErrors('title')}"
+                                  th:errors="*{title}"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="author">
+                                <i class="bi bi-person me-1"></i>Tác Giả:
+                            </label>
+                            <input class="form-control" type="text" th:field="*{author}"
+                                   id="author">
+                            <span class="text-danger" th:if="${#fields.hasErrors('author')}"
+                                  th:errors="*{author}"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="price">
+                                <i class="bi bi-currency-dollar me-1"></i>Giá:
+                            </label>
+                            <input class="form-control" type="text" th:field="*{price}"
+                                   id="price">
+                            <span class="text-danger" th:if="${#fields.hasErrors('price')}"
+                                  th:errors="*{price}"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" for="category">
+                                <i class="bi bi-tag me-1"></i>Danh Mục: <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-control" id="category" name="category.id">
+                                <option value="">-- Chọn Danh Mục --</option>
+                                <option th:each="category : ${categories}"
+                                        th:value="${category.getId()}"
+                                        th:text="${category.getName()}"
+                                        th:selected="${category.getId() == book.category.getId()}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" for="stock">
+                                <i class="bi bi-box-seam me-1"></i>Số lượng trong kho:
+                            </label>
+                            <input class="form-control" type="number" 
+                                   th:field="*{stock}" id="stock" 
+                                   min="0" required>
+                            <span class="text-danger" th:if="${#fields.hasErrors('stock')}"
+                                  th:errors="*{stock}"></span>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-save me-2"></i>Cập Nhật
+                            </button>
+                            <a th:href="@{/books}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Quay Lại Danh Sách
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="col-6 mb-3">
-            <label class="form-label" for="author">Author:</label>
-            <input class="form-control" type="text" th:field="*{author}"
-                   id="author">
-            <span class="text-danger" th:if="${#fields.hasErrors('author')}"
-                  th:errors="*{author}"></span>
-        </div>
-        <div class="col-6 mb-3">
-            <label class="form-label" for="price">Price:</label>
-            <input class="form-control" type="text" th:field="*{price}"
-                   id="price">
-            <span class="text-danger" th:if="${#fields.hasErrors('price')}"
-                  th:errors="*{price}"></span>
-        </div>
-        <div class="col-6 mb-3">
-            <label class="form-label" for="category">Category:</label><span
-                class="text-danger">*</span>
-            <select class="form-control" id="category" name="category.id">
-                <option value="">-- Select Category --</option>
-                <option th:each="category : ${categories}"
-                        th:value="${category.getId()}"
-                        th:text="${category.getName()}"
-                        th:selected="${category.getId() == book.category.getId()}"></option>
-            </select>
-        </div>
-        <input type="submit" value="Save">
-    </form>
-    <br>
-    <a th:href="@{/books}">Back to List</a>
+    </div>
 </div>
 <th:block th:replace="~{layout::footer}"></th:block>
 </body>

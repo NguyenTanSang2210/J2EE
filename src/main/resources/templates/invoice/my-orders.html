@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn Hàng Của Tôi</title>
+    <th:block th:replace="~{layout::link-css}"></th:block>
+    <th:block th:replace="~{layout::custom-css}"></th:block>
+    <style>
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .order-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{layout::header}"></th:block>
+
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="bi bi-bag-check me-2"></i>Đơn Hàng Của Tôi</h1>
+            <p class="text-muted">Quản lý và theo dõi các đơn hàng của bạn</p>
+        </div>
+    </div>
+    
+    <!-- Alert messages -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(invoices)}" class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card text-center py-5">
+                <div class="card-body">
+                    <i class="bi bi-inbox" style="font-size: 5rem; color: #9CA3AF;"></i>
+                    <h3 class="mt-3">Chưa Có Đơn Hàng</h3>
+                    <p class="text-muted">Bạn chưa có đơn hàng nào</p>
+                    <a href="/books" class="btn btn-primary mt-3">
+                        <i class="bi bi-journal-text me-2"></i>Bắt Đầu Mua Sắm
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Orders list -->
+    <div th:if="${!#lists.isEmpty(invoices)}" class="row">
+        <div class="col-12">
+            <div th:each="invoice : ${invoices}" class="card order-card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <!-- Order Info -->
+                        <div class="col-md-3">
+                            <h6 class="mb-1">
+                                <i class="bi bi-receipt me-1"></i>Đơn hàng 
+                                <span class="text-primary">#<span th:text="${invoice.id}"></span></span>
+                            </h6>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                <span th:text="${#dates.format(invoice.invoiceDate, 'dd/MM/yyyy HH:mm')}"></span>
+                            </small>
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <div class="col-md-2">
+                            <small class="text-muted d-block">Thanh toán:</small>
+                            <span th:switch="${invoice.paymentMethod}">
+                                <span th:case="'COD'"><i class="bi bi-cash me-1"></i>COD</span>
+                                <span th:case="'BANKING'"><i class="bi bi-bank me-1"></i>Banking</span>
+                                <span th:case="'CREDIT_CARD'"><i class="bi bi-credit-card me-1"></i>Thẻ</span>
+                                <span th:case="*" th:text="${invoice.paymentMethod}"></span>
+                            </span>
+                        </div>
+                        
+                        <!-- Total Price -->
+                        <div class="col-md-2">
+                            <small class="text-muted d-block">Tổng tiền:</small>
+                            <h5 class="mb-0 text-success">
+                                <span th:text="${#numbers.formatDecimal(invoice.price, 0, 'COMMA', 0, 'POINT')}"></span> đ
+                            </h5>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="col-md-2 text-center">
+                            <span class="status-badge"
+                                  th:classappend="${invoice.status == 'PENDING' ? 'bg-warning text-dark' : (invoice.status == 'PROCESSING' ? 'bg-info text-white' : (invoice.status == 'COMPLETED' ? 'bg-success text-white' : 'bg-danger text-white'))}">
+                                <span th:switch="${invoice.status}">
+                                    <span th:case="'PENDING'">Chờ xử lý</span>
+                                    <span th:case="'PROCESSING'">Đang xử lý</span>
+                                    <span th:case="'COMPLETED'">Hoàn thành</span>
+                                    <span th:case="'CANCELLED'">Đã hủy</span>
+                                    <span th:case="*" th:text="${invoice.status}"></span>
+                                </span>
+                            </span>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="col-md-3 text-end">
+                            <a th:href="@{/invoices/{id}(id=${invoice.id})}" 
+                               class="btn btn-outline-primary btn-sm me-1">
+                                <i class="bi bi-eye me-1"></i>Chi tiết
+                            </a>
+                            
+                            <form th:if="${invoice.status == 'PENDING'}" 
+                                  th:action="@{/invoices/{id}/cancel(id=${invoice.id})}" 
+                                  method="post" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-x-circle me-1"></i>Hủy
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Shipping Address -->
+                    <div class="row mt-3 pt-3 border-top" th:if="${invoice.shippingAddress}">
+                        <div class="col-12">
+                            <small class="text-muted">
+                                <i class="bi bi-geo-alt me-1"></i>Địa chỉ: 
+                                <span th:text="${invoice.shippingAddress}"></span>
+                            </small>
+                            <small class="text-muted ms-3" th:if="${invoice.phone}">
+                                <i class="bi bi-telephone me-1"></i>SĐT: 
+                                <span th:text="${invoice.phone}"></span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div th:if="${!#lists.isEmpty(invoices)}" class="row mt-4">
+        <div class="col-md-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h4 th:text="${#lists.size(invoices)}">0</h4>
+                            <small class="text-muted">Tổng đơn hàng</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 th:text="${pendingCount}">0</h4>
+                            <small class="text-muted">Chờ xử lý</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 th:text="${processingCount}">0</h4>
+                            <small class="text-muted">Đang xử lý</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 th:text="${completedCount}">0</h4>
+                            <small class="text-muted">Hoàn thành</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{layout::footer}"></th:block>
+</body>
+</html>

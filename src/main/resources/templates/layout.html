@@ -5,23 +5,25 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>My App</title>
+    <title>Hệ Thống Quản Lý Sách</title>
     <link th:fragment="link-css" rel="stylesheet"
           th:href="@{/css/bootstrap.min.css}">
     <link th:fragment="custom-css" rel="stylesheet"
           th:href="@{/css/style.css}">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
-<body class="d-flex flex-column h-100">
+<body class="d-flex flex-column min-vh-100">
 <header th:fragment="header">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">HUTECH</a>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-book-half me-2 fs-4"></i>
+                <span>Quản Lý Sách</span>
+            </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-
                     data-bs-target="#navbarSupportedContent"
                     aria-controls="navbarSupportedContent"
                     aria-expanded="false" aria-label="Toggle navigation">
@@ -31,48 +33,85 @@
                  id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page"
-                           href="/">Home</a>
+                        <a class="nav-link d-flex align-items-center" aria-current="page"
+                           href="/">
+                            <i class="bi bi-house-door me-1"></i> Trang Chủ
+                        </a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
-                        <a class="nav-link" href="/books">
-                            List Book
+                        <a class="nav-link d-flex align-items-center" href="/books">
+                            <i class="bi bi-journal-text me-1"></i> Danh Sách Sách
                         </a>
                     </li>
                     <li class="nav-item"
                         sec:authorize="hasAnyAuthority('ADMIN')">
-                        <a class="nav-link" href="/books/add">
-                            Add Book
+                        <a class="nav-link d-flex align-items-center" href="/books/add">
+                            <i class="bi bi-plus-circle me-1"></i> Thêm Sách
                         </a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
-                        <a class="nav-link" href="/cart">
-                            Cart
+                        <a class="nav-link d-flex align-items-center" href="/cart">
+                            <i class="bi bi-cart3 me-1"></i> Giỏ Hàng
                         </a>
                     </li>
-                    <li sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post">
-                            <button class="btn btn-outline-danger"
-                                    type="submit">Logout</button>
-                        </form>
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <a class="nav-link d-flex align-items-center" href="/invoices">
+                            <i class="bi bi-receipt me-1"></i> Đơn Hàng Của Tôi
+                        </a>
                     </li>
-                    <li sec:authorize="!isAuthenticated()">
-                        <a class="btn btn-outline-primary" href="/login">
-                            Login
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN')">
+                        <a class="nav-link d-flex align-items-center" href="/admin/invoices">
+                            <i class="bi bi-clipboard-data me-1"></i> Quản Lý Đơn Hàng
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN')">
+                        <a class="nav-link d-flex align-items-center" href="/admin/inventory">
+                            <i class="bi bi-boxes me-1"></i> Quản Lý Kho
                         </a>
                     </li>
                 </ul>
+                <!-- Search Bar -->
+                <form action="/books/search" method="get" class="d-flex me-3" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                    <input class="form-control me-2" type="search" name="keyword" 
+                           placeholder="Tìm sách theo tên hoặc tác giả..." style="width: 300px;">
+                    <button class="btn btn-outline-light" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                <div class="d-flex align-items-center">
+                    <li class="nav-item list-unstyled" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button class="btn btn-outline-danger d-flex align-items-center"
+                                    type="submit">
+                                <i class="bi bi-box-arrow-right me-1"></i> Đăng Xuất
+                            </button>
+                        </form>
+                    </li>
+                    <li class="nav-item list-unstyled" sec:authorize="!isAuthenticated()">
+                        <a class="btn btn-outline-primary d-flex align-items-center" href="/login">
+                            <i class="bi bi-person-circle me-1"></i> Đăng Nhập
+                        </a>
+                    </li>
+                </div>
             </div>
         </div>
     </nav>
 </header>
-<div class="container">
+<div class="container my-4">
     <div th:fragment="content"></div>
 </div>
-<footer th:fragment="footer" class="footer mt-auto py-3 bg-light">
-    <div class="container text-center">Copyright &copy;
-        <span th:text="${#dates.year(#dates.createNow())}"></span>
-        <a href="https://www.hutech.edu.vn/">HUTECH Education</a>
+<footer th:fragment="footer" class="footer mt-auto py-4">
+    <div class="container text-center">
+        <p class="mb-0">
+            <i class="bi bi-c-circle me-1"></i>
+            Copyright <span th:text="${#dates.year(#dates.createNow())}"></span>
+            <a href="https://www.facebook.com/tan.sang.951723/?locale=vi_VN" class="text-decoration-none">
+                <i class="bi bi-building me-1"></i>TanSang
+            </a>
+        </p>
+        <p class="mb-0 mt-2 small">
+            <i class="bi bi-book-fill me-1"></i> Hệ Thống Quản Lý Sách Hiện Đại
+        </p>
     </div>
     <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
     <script th:src="@{/js/bootstrap.bundle.min.js}"></script>

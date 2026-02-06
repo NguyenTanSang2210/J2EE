@@ -1,24 +1,72 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Internal Server Error</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lỗi Máy Chủ</title>
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
+    <style>
+        .error-container {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-content {
+            text-align: center;
+            animation: fadeInUp 0.6s ease;
+        }
+        .error-code {
+            font-size: 8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+        .error-icon {
+            font-size: 5rem;
+            color: #F59E0B;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+    </style>
 </head>
 <body>
 <th:block th:replace="~{layout::header}"></th:block>
-<div class="d-flex align-items-center justify-content-center vh-25">
-    <div class="text-center">
-        <h1 class="display-1 fw-bold">500</h1>
-        <p class="fs-3"> <span class="text-danger">Opps!</span>
-            Internal Server Error.</p>
-        <p class="lead">
-            The server encountered an internal error and was unable to
-            complete your request.
+<div class="error-container">
+    <div class="error-content">
+        <i class="bi bi-server error-icon"></i>
+        <h1 class="error-code">500</h1>
+        <p class="fs-3 mb-3">
+            <span class="text-danger fw-bold">Rất Tiếc!</span> Lỗi máy chủ
         </p>
-        <small class="text-muted">Please check the server logs for more
-            details.</small><br/>
-        <a href="/" class="btn btn-primary">Back to homepage</a>
+        <p class="lead text-muted mb-2">
+            Máy chủ gặp lỗi nội bộ và không thể hoàn thành yêu cầu của bạn.
+        </p>
+        <p class="small text-muted mb-4">
+            <i class="bi bi-info-circle me-1"></i>Vui lòng kiểm tra logs máy chủ để biết thêm chi tiết.
+        </p>
+        <a href="/" class="btn btn-primary btn-lg">
+            <i class="bi bi-house-door me-2"></i>Về Trang Chủ
+        </a>
     </div>
 </div>
 <th:block th:replace="~{layout::footer}"></th:block>

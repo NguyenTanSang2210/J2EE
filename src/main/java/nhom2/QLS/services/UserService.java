@@ -40,6 +40,13 @@ public class UserService implements UserDetailsService {
     }
 
     /**
+     * Tìm user theo email, trả về Optional
+     */
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    /**
      * Load user cho Spring Security authentication
      * Implement từ UserDetailsService interface
      */

@@ -23,6 +23,7 @@ public class CartService {
     private final IInvoiceRepository invoiceRepository;
     private final IItemInvoiceRepository itemInvoiceRepository;
     private final IBookRepository bookRepository;
+    private final BookService bookService;
     public Cart getCart(@NotNull HttpSession session) {
         return Optional.ofNullable((Cart)
                         session.getAttribute(CART_SESSION_KEY))
@@ -55,6 +56,7 @@ public class CartService {
         var invoice = new Invoice();
         invoice.setInvoiceDate(new Date(new Date().getTime()));
         invoice.setPrice(getSumPrice(session));
+        invoice.setStatus("PENDING");
         invoiceRepository.save(invoice);
         cart.getCartItems().forEach(item -> {
             var items = new ItemInvoice();
@@ -64,6 +66,43 @@ public class CartService {
                     .orElseThrow());
             itemInvoiceRepository.save(items);
         });
+        removeCart(session);
+    }
+    
+    public void saveCart(@NotNull HttpSession session, @NotNull Invoice invoiceData) {
+        var cart = getCart(session);
+        if (cart.getCartItems().isEmpty()) {
+            throw new IllegalStateException("Giỏ hàng trống");
+        }
+        
+        // Check stock availability before processing
+        for (Item item : cart.getCartItems()) {
+            if (!bookService.checkStock(item.getBookId(), item.getQuantity())) {
+                throw new IllegalStateException("Sách '" + item.getBookName() + "' không đủ hàng trong kho");
+            }
+        }
+        
+        // Set invoice date and price
+        invoiceData.setInvoiceDate(new Date());
+        invoiceData.setPrice(getSumPrice(session));
+        
+        // Save invoice
+        invoiceRepository.save(invoiceData);
+        
+        // Save cart items and reduce stock
+        cart.getCartItems().forEach(item -> {
+            var itemInvoice = new ItemInvoice();
+            itemInvoice.setInvoice(invoiceData);
+            itemInvoice.setQuantity(item.getQuantity());
+            itemInvoice.setBook(bookRepository.findById(item.getBookId())
+                    .orElseThrow(() -> new IllegalArgumentException("Book not found with id: " + item.getBookId())));
+            itemInvoiceRepository.save(itemInvoice);
+            
+            // Reduce stock after order is placed
+            bookService.reduceStock(item.getBookId(), item.getQuantity());
+        });
+        
+        // Clear cart
         removeCart(session);
     }
 }

@@ -3,28 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-    <meta name="viewport" content="width=device-width, initial-
-scale=1.0">
-
-    <title>Cart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng</title>
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
 </head>
 <body>
 <th:block th:replace="~{layout::header}"></th:block>
 <div class="container" th:if="${not #lists.isEmpty(cart.cartItems)}">
-    <table class="table">
-        <thead>
-        <tr>
-            <th scope="col">Book ID</th>
-            <th scope="col">Book Name</th>
-            <th scope="col">Quantity</th>
-            <th scope="col">Price</th>
-            <th scope="col">Total</th>
-            <th scope="col">Action</th>
-        </tr>
-        </thead>
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="bi bi-cart3 me-2"></i>Giỏ Hàng Của Bạn</h1>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col"><i class="bi bi-hash me-1"></i>ID</th>
+                <th scope="col"><i class="bi bi-book me-1"></i>Tên Sách</th>
+                <th scope="col"><i class="bi bi-123 me-1"></i>Số Lượng</th>
+                <th scope="col"><i class="bi bi-currency-dollar me-1"></i>Giá</th>
+                <th scope="col"><i class="bi bi-calculator me-1"></i>Tổng</th>
+                <th scope="col"><i class="bi bi-gear me-1"></i>Thao Tác</th>
+            </tr>
+            </thead>
         <tbody>
         <tr th:each="item : ${cart.cartItems}">
             <td th:text="${item.getBookId()}"></td>
@@ -40,34 +43,50 @@ scale=1.0">
             <td th:text="${item.getPrice()}"></td>
             <td th:text="${item.getPrice() * item.getQuantity()}"></td>
             <td>
-                <a class="btn btn-danger"
+                <a class="btn btn-danger btn-sm"
                    th:href="@{/cart/removeFromCart/{id}(id=${item.getBookId()})}">
-                    Remove
+                    <i class="bi bi-trash me-1"></i>Xóa
                 </a>
             </td>
         </tr>
-        </tbody>
-    </table>
-    <div class="row">
-        <div class="col-md-12">
-            <h3>Total: <span th:text="${totalPrice}"></span></h3>
-        </div>
-        <div class="col-md-12 text-center">
-            <a class="btn btn-success"
-               th:href="@{/cart/checkout}">Checkout</a>
-            <a class="btn btn-danger"
-               th:href="@{/cart/clearCart}">Clear Cart</a>
+            </tbody>
+        </table>
+    </div>
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12 text-end mb-3">
+                    <h3 class="text-primary">
+                        <i class="bi bi-wallet2 me-2"></i>Tổng Cộng: 
+                        <span class="fw-bold" th:text="${totalPrice}"></span>
+                    </h3>
+                </div>
+                <div class="col-md-12 text-center">
+                    <a class="btn btn-success btn-lg me-2"
+                       th:href="@{/cart/checkout}">
+                        <i class="bi bi-credit-card me-2"></i>Thanh Toán
+                    </a>
+                    <a class="btn btn-danger btn-lg"
+                       th:href="@{/cart/clearCart}">
+                        <i class="bi bi-trash me-2"></i>Xóa Giỏ Hàng
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 <div class="container" th:if="${#lists.isEmpty(cart.cartItems)}">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 offset-md-3 text-center">
-                <h3 class="mt-5">Your cart is empty</h3>
-                <p class="lead">Please add some books to your cart</p>
-                <a class="btn btn-primary" href="/books">Go to list
-                    book</a>
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card text-center empty-state">
+                <div class="card-body py-5">
+                    <i class="bi bi-cart-x" style="font-size: 5rem; color: #9CA3AF; margin-bottom: 1.5rem;"></i>
+                    <h3 class="mb-3">Giỏ Hàng Trống</h3>
+                    <p class="lead text-muted mb-4">Bạn chưa có sản phẩm nào trong giỏ hàng</p>
+                    <a class="btn btn-primary btn-lg" href="/books">
+                        <i class="bi bi-journal-text me-2"></i>Xem Danh Sách Sách
+                    </a>
+                </div>
             </div>
         </div>
     </div>

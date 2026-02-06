@@ -114,6 +114,15 @@
 			<version>0.12.5</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- ========================= -->
+		<!-- SePay Payment Integration -->
+		<!-- ========================= -->
+		<!-- WebFlux cho WebClient - Gọi API SePay -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
 	</dependencies>
 
 

@@ -56,19 +56,21 @@ public class SecurityConfig {
         return http
                 // Disable CSRF only for REST API endpoints
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**")
+                        .ignoringRequestMatchers("/api/**") // Allow all API endpoints (including webhooks)
                 )
                 
                 // Configure authorization
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/webhooks/**").permitAll() // ⭐ Allow webhooks without authentication
                         .requestMatchers("/api/v1/books").permitAll() // Public cho test
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/", "/login", "/register", "/error").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         
                         // Admin only endpoints
+                        .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                         .requestMatchers("/books/edit/**", "/books/add", "/books/delete").hasAnyAuthority("ADMIN")
                         .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN")
                         
