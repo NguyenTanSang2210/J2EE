@@ -70,6 +70,11 @@ public class PaymentController {
      * URL: GET /payment/check/123
      * Frontend gọi API này mỗi 5 giây để check
      * 
+     * ⚠️ NOTE: SePay không cung cấp API để query transactions
+     * - Endpoint này CHỈ check database status
+     * - Payment status được cập nhật qua WEBHOOK khi SePay gửi notification
+     * - Cần setup ngrok hoặc domain để nhận webhook
+     * 
      * @param invoiceId ID invoice cần kiểm tra
      * @return JSON {isPaid: true/false, transactionCode: "...", status: "..."}
      */
@@ -82,39 +87,17 @@ public class PaymentController {
             
             Map<String, Object> response = new HashMap<>();
             
-            // Nếu đã thanh toán rồi thì return luôn
+            // Check database status (updated by webhook)
             if ("PAID".equals(invoice.getPaymentStatus())) {
                 response.put("isPaid", true);
                 response.put("transactionCode", invoice.getTransactionCode());
                 response.put("paidAt", invoice.getPaidAt());
                 response.put("status", "PAID");
-                log.debug("✅ Invoice #{} already paid", invoiceId);
-                return ResponseEntity.ok(response);
-            }
-            
-            // Kiểm tra giao dịch mới từ SePay
-            log.debug("🔍 Checking payment status for invoice #{}", invoiceId);
-            boolean isPaid = sePayService.verifyPaymentForInvoice(invoice);
-            
-            if (isPaid) {
-                // Tìm mã giao dịch
-                String txCode = sePayService.findTransactionCode(invoice);
-                
-                // Cập nhật trạng thái invoice
-                invoice.setPaymentStatus("PAID");
-                invoice.setTransactionCode(txCode);
-                invoice.setPaidAt(new Date());
-                invoice.setStatus("PROCESSING"); // Chuyển sang xử lý đơn hàng
-                invoiceRepository.save(invoice);
-                
-                log.info("✅ Payment confirmed for invoice #{} with transaction {}", invoiceId, txCode);
-                
-                response.put("isPaid", true);
-                response.put("transactionCode", txCode);
-                response.put("status", "PAID");
+                log.debug("✅ Invoice #{} already paid (via webhook)", invoiceId);
             } else {
                 response.put("isPaid", false);
                 response.put("status", "PENDING");
+                log.debug("⏳ Invoice #{} still pending - waiting for webhook notification", invoiceId);
             }
             
             return ResponseEntity.ok(response);

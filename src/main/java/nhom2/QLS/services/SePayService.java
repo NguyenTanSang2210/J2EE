@@ -94,86 +94,25 @@ public class SePayService {
     }
 
     /**
-     * 2. Lấy danh sách giao dịch gần đây từ SePay API
+     * 2. [DISABLED] Lấy danh sách giao dịch gần đây từ SePay API
+     * 
+     * ⚠️ IMPORTANT: SePay does NOT provide API to query transactions!
+     * - Tested endpoints: /transactions, /transaction, /history, /list → All return 404/501
+     * - SePay only supports WEBHOOK for payment notifications
+     * - This method is disabled and always returns empty list
+     * 
+     * For payment verification:
+     * 1. Use Webhook (requires ngrok/domain) - automatic
+     * 2. Use Manual confirmation button - for development
      * 
      * @param limit Số lượng giao dịch tối đa cần lấy
-     * @return List<SePayTransactionDto> danh sách giao dịch
+     * @return Empty list (API not available)
      */
+    @Deprecated
     public List<SePayTransactionDto> getRecentTransactions(int limit) {
-        try {
-            log.info("🔍 [DEBUG] ========== FETCHING SEPAY TRANSACTIONS ==========");
-            log.info("🔍 [DEBUG] API URL: {}", sePayConfig.getApi().getUrl());
-            log.info("🔍 [DEBUG] Account Number: {}", sePayConfig.getAccount().getNumber());
-            log.info("🔍 [DEBUG] Limit: {}", limit);
-            log.info("🔍 [DEBUG] Token: {}...{}", 
-                    sePayConfig.getApi().getToken().substring(0, 10),
-                    sePayConfig.getApi().getToken().substring(sePayConfig.getApi().getToken().length() - 10));
-            
-            WebClient webClient = webClientBuilder
-                    .baseUrl(sePayConfig.getApi().getUrl())
-                    .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + sePayConfig.getApi().getToken())
-                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .build();
-
-            String fullUrl = String.format("%s/transactions?account_number=%s&limit=%d",
-                    sePayConfig.getApi().getUrl(), sePayConfig.getAccount().getNumber(), limit);
-            log.info("🔍 [DEBUG] Full URL: {}", fullUrl);
-
-            // Gọi API SePay /transactions
-            SePayTransactionDto[] transactions = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/transactions")
-                            .queryParam("account_number", sePayConfig.getAccount().getNumber())
-                            .queryParam("limit", limit)
-                            .build())
-                    .retrieve()
-                    .onStatus(
-                            status -> status.is4xxClientError(),
-                            response -> {
-                                log.error("❌ [DEBUG] SePay API 4xx Error: {}", response.statusCode());
-                                return response.bodyToMono(String.class)
-                                        .flatMap(body -> {
-                                            log.error("❌ [DEBUG] Error Body: {}", body);
-                                            return response.createException();
-                                        });
-                            }
-                    )
-                    .onStatus(
-                            status -> status.is5xxServerError(),
-                            response -> {
-                                log.error("❌ [DEBUG] SePay API 5xx Error: {}", response.statusCode());
-                                return response.createException();
-                            }
-                    )
-                    .bodyToMono(SePayTransactionDto[].class)
-                    .block();
-
-            List<SePayTransactionDto> result = new ArrayList<>();
-            if (transactions != null && transactions.length > 0) {
-                for (SePayTransactionDto tx : transactions) {
-                    result.add(tx);
-                }
-            }
-            
-            log.info("✅ Fetched {} transactions from SePay", result.size());
-            
-            // 🔍 DEBUG: Log first 5 transactions for inspection
-            if (!result.isEmpty()) {
-                log.info("🔍 [DEBUG] Recent transactions (showing first 5):");
-                int count = 0;
-                for (SePayTransactionDto tx : result) {
-                    if (count >= 5) break;
-                    log.info("   TX #{}: Code={}, Content='{}', Amount={}", 
-                            ++count, tx.getCode(), tx.getContent(), tx.getTransferAmount());
-                }
-            }
-            
-            return result;
-            
-        } catch (Exception e) {
-            log.error("❌ Error fetching transactions from SePay", e);
-            return new ArrayList<>();
-        }
+        log.warn("⚠️ getRecentTransactions() is DISABLED - SePay does not provide transaction query API!");
+        log.warn("⚠️ Use Webhook or Manual Verification instead.");
+        return new ArrayList<>();
     }
 
     /**
