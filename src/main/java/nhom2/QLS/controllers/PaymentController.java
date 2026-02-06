@@ -6,6 +6,7 @@ import nhom2.QLS.dtos.SePayQrCodeDto;
 import nhom2.QLS.entities.Invoice;
 import nhom2.QLS.repositories.IInvoiceRepository;
 import nhom2.QLS.services.SePayService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -108,6 +109,59 @@ public class PaymentController {
             errorResponse.put("isPaid", false);
             errorResponse.put("error", e.getMessage());
             return ResponseEntity.ok(errorResponse);
+        }
+    }
+
+    /**
+     * Manual Payment Verification (For Development/Testing)
+     * URL: POST /payment/verify-manual/123
+     * 
+     * Use this when:
+     * - Webhook is not configured yet
+     * - Testing payment flow
+     * - Customer confirmed they transferred but webhook failed
+     * 
+     * @param invoiceId ID invoice to verify manually
+     * @return JSON response with verification status
+     */
+    @PostMapping("/verify-manual/{invoiceId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> verifyPaymentManually(@PathVariable Long invoiceId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Invoice invoice = invoiceRepository.findById(invoiceId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng #" + invoiceId));
+            
+            // Check if already paid
+            if ("PAID".equals(invoice.getPaymentStatus())) {
+                response.put("success", true);
+                response.put("message", "Đơn hàng đã được thanh toán trước đó");
+                response.put("alreadyPaid", true);
+                return ResponseEntity.ok(response);
+            }
+            
+            // Mark as paid manually
+            invoice.setPaymentStatus("PAID");
+            invoice.setTransactionCode("MANUAL_" + System.currentTimeMillis());
+            invoice.setPaidAt(new Date());
+            invoice.setStatus("PROCESSING"); // Chuyển sang xử lý đơn hàng
+            invoiceRepository.save(invoice);
+            
+            log.info("✅ Manual payment verification successful for invoice #{}", invoiceId);
+            
+            response.put("success", true);
+            response.put("message", "Xác nhận thanh toán thành công!");
+            response.put("isPaid", true);
+            response.put("transactionCode", invoice.getTransactionCode());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("❌ Error in manual verification for invoice #{}", invoiceId, e);
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

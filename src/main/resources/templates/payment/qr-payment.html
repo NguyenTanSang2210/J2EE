@@ -294,8 +294,11 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="action-buttons">
-            <form th:action="@{/payment/cancel/{id}(id=${invoice.id})}" method="post" id="cancelForm">
+        <div class="action-buttons" id="actionButtons">
+            <button type="button" class="btn btn-success btn-custom" onclick="verifyManually()" id="manualVerifyBtn" style="background: #28a745; color: white; border: none;">
+                <i class="bi bi-check-circle me-2"></i>Đã Chuyển Khoản - Xác Nhận Ngay
+            </button>
+            <form th:action="@{/payment/cancel/{id}(id=${invoice.id})}" method="post" id="cancelForm" style="display: inline;">
                 <button type="button" class="btn btn-cancel btn-custom" onclick="confirmCancel()">
                     <i class="bi bi-x-circle me-2"></i>Hủy Thanh Toán
                 </button>
@@ -366,6 +369,47 @@
             `Đang kiểm tra giao dịch${dots} (Lần ${checkCount})`;
     }
 
+    function verifyManually() {
+        const btn = document.getElementById('manualVerifyBtn');
+        const originalHTML = btn.innerHTML;
+        
+        if (!confirm('⚠️ Bạn đã chuyển khoản CHÍNH XÁC theo thông tin trên?\n\n✓ Số tiền đúng\n✓ Nội dung chuyển khoản đúng\n\nNhấn OK để xác nhận thanh toán.')) {
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xác nhận...';
+        
+        fetch(`/payment/verify-manual/${invoiceId}`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.isPaid) {
+                clearInterval(checkInterval);
+                showSuccess(data.transactionCode);
+                setTimeout(() => {
+                    window.location.href = '/invoices';
+                }, 3000);
+            } else {
+                alert('❌ ' + (data.message || 'Không thể xác nhận thanh toán'));
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error in manual verification:', error);
+            alert('❌ Lỗi kết nối. Vui lòng thử lại.');
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        });
+    }
+
     function showSuccess(transactionCode) {
         const statusSection = document.getElementById('statusSection');
         statusSection.className = 'status-section paid';
@@ -381,7 +425,7 @@
                 Đang chuyển hướng về danh sách đơn hàng...
             </small>
         `;
-        document.querySelector('.action-buttons').style.display = 'none';
+        document.getElementById('actionButtons').style.display = 'none';
     }
 
     function showTimeout() {
