@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>nhom2</groupId>
-	<artifactId>QLS</artifactId>
+	<artifactId>NguyenTanSang</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	<name>QLS</name>
+	<name>NguyenTanSang</name>
 	<description>Phát triển ứng dụng với J2EE</description>
 	<url/>
 	<licenses>
