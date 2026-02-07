@@ -6,93 +6,322 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Sách</title>
+    <title>E-BOOKS - Modern Professional Bookstore</title>
     <link th:fragment="link-css" rel="stylesheet"
           th:href="@{/css/bootstrap.min.css}">
     <link th:fragment="custom-css" rel="stylesheet"
           th:href="@{/css/style.css}">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Bootstrap Icons & Fonts Fragment -->
+    <th:block th:fragment="icons-and-fonts">
+        <!-- Bootstrap Icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    </th:block>
 </head>
 <body class="d-flex flex-column min-vh-100">
-<header th:fragment="header">
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <i class="bi bi-book-half me-2 fs-4"></i>
-                <span>Quản Lý Sách</span>
-            </a>
+<header th:fragment="header" class="sticky-top">
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="row align-items-center py-2">
+                <div class="col-md-6">
+                    <small><i class="bi bi-telephone me-2"></i>Hotline: 1900-xxxx</small>
+                    <small class="ms-3"><i class="bi bi-envelope me-2"></i>support@e-books.vn</small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small sec:authorize="isAuthenticated()">
+                        <i class="bi bi-person-circle me-1"></i>
+                        Xin chào, <span sec:authentication="name"></span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+        <div class="container">
+            <div class="navbar-container d-flex align-items-center w-100">
+                <!-- Left: Logo + Menu -->
+                <div class="navbar-left-section d-flex align-items-center">
+                    <a class="navbar-brand me-2" href="/">
+                        <span class="logo-text">E-BOOKS</span>
+                    </a>
+                    
+                    <!-- Desktop Menu -->
+                    <ul class="navbar-nav d-none d-lg-flex flex-row me-2">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <i class="bi bi-house-door me-1"></i>Trang Chủ
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                            <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" 
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-grid me-1"></i>Danh Mục
+                            </a>
+                            <ul class="dropdown-menu modern-dropdown" aria-labelledby="categoryDropdown">
+                                <li><a class="dropdown-item" href="/books"><i class="bi bi-book me-2"></i>Tất cả sách</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/books/search?categoryId=1"><i class="bi bi-bookmark me-2"></i>Văn học</a></li>
+                                <li><a class="dropdown-item" href="/books/search?categoryId=2"><i class="bi bi-lightbulb me-2"></i>Khoa học</a></li>
+                                <li><a class="dropdown-item" href="/books/search?categoryId=3"><i class="bi bi-people me-2"></i>Kỹ năng sống</a></li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                            <a class="nav-link" href="/books?sort=createdDate,desc">
+                                <i class="bi bi-star me-1"></i>Sách Mới
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                            <a class="nav-link" href="/books?sort=sold,desc">
+                                <i class="bi bi-fire me-1"></i>Sách Bán Chạy
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ADMIN')">
+                            <a class="nav-link dropdown-toggle text-danger" href="#" id="adminDropdown" 
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-gear-fill me-1"></i>Quản Trị
+                            </a>
+                            <ul class="dropdown-menu modern-dropdown" aria-labelledby="adminDropdown">
+                                <li><a class="dropdown-item" href="/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="/books/add"><i class="bi bi-plus-circle me-2"></i>Thêm Sách</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/admin/categories"><i class="bi bi-grid-3x3-gap me-2"></i>Quản lý danh mục</a></li>
+                                <li><a class="dropdown-item" href="/admin/invoices"><i class="bi bi-clipboard-data me-2"></i>Quản lý đơn hàng</a></li>
+                                <li><a class="dropdown-item" href="/admin/inventory"><i class="bi bi-boxes me-2"></i>Quản lý kho</a></li>
+                                <li><a class="dropdown-item" href="/admin/users"><i class="bi bi-people me-2"></i>Quản lý users</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent"
-                    aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse"
-                 id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" aria-current="page"
-                           href="/">
-                            <i class="bi bi-house-door me-1"></i> Trang Chủ
+                <!-- Center: Search (Desktop Only) -->
+                <div class="navbar-center-section d-none d-lg-flex flex-grow-1 justify-content-center">
+                    <form action="/books/search" method="get" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <div class="input-group search-input-group">
+                            <input class="form-control search-input" type="search" name="keyword" 
+                                   placeholder="Tìm kiếm sách, tác giả...">
+                            <button class="btn btn-search" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right: User Actions (Desktop Only) -->
+                <div class="navbar-right-section d-none d-lg-flex align-items-center">
+                    <!-- Wishlist -->
+                    <a class="nav-link icon-link" href="/wishlist" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <span class="icon-wrapper">
+                            <i class="bi bi-heart"></i>
+                            <span id="wishlistCount" class="badge-count">0</span>
+                        </span>
+                        <span class="icon-label d-none d-xl-inline ms-1">Yêu thích</span>
+                    </a>
+                    
+                    <!-- Cart -->
+                    <a class="nav-link icon-link" href="/cart" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <span class="icon-wrapper">
+                            <i class="bi bi-cart3"></i>
+                            <span id="cartCount" class="badge-count">0</span>
+                        </span>
+                        <span class="icon-label d-none d-xl-inline ms-1">Giỏ hàng</span>
+                    </a>
+                    
+                    <!-- User Menu -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-link icon-link dropdown-toggle" href="#" id="userDropdown" 
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i>
+                            <span class="icon-label d-none d-xl-inline ms-1">Tài khoản</span>
                         </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
-                        <a class="nav-link d-flex align-items-center" href="/books">
-                            <i class="bi bi-journal-text me-1"></i> Danh Sách Sách
-                        </a>
-                    </li>
-                    <li class="nav-item"
-                        sec:authorize="hasAnyAuthority('ADMIN')">
-                        <a class="nav-link d-flex align-items-center" href="/books/add">
-                            <i class="bi bi-plus-circle me-1"></i> Thêm Sách
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
-                        <a class="nav-link d-flex align-items-center" href="/cart">
-                            <i class="bi bi-cart3 me-1"></i> Giỏ Hàng
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
-                        <a class="nav-link d-flex align-items-center" href="/invoices">
-                            <i class="bi bi-receipt me-1"></i> Đơn Hàng Của Tôi
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN')">
-                        <a class="nav-link d-flex align-items-center" href="/admin/invoices">
-                            <i class="bi bi-clipboard-data me-1"></i> Quản Lý Đơn Hàng
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN')">
-                        <a class="nav-link d-flex align-items-center" href="/admin/inventory">
-                            <i class="bi bi-boxes me-1"></i> Quản Lý Kho
-                        </a>
-                    </li>
-                </ul>
-                <!-- Search Bar -->
-                <form action="/books/search" method="get" class="d-flex me-3" sec:authorize="hasAnyAuthority('ADMIN','USER')">
-                    <input class="form-control me-2" type="search" name="keyword" 
-                           placeholder="Tìm sách theo tên hoặc tác giả..." style="width: 300px;">
-                    <button class="btn btn-outline-light" type="submit">
-                        <i class="bi bi-search"></i>
-                    </button>
+                        <ul class="dropdown-menu dropdown-menu-end modern-dropdown" aria-labelledby="userDropdown">
+                            <li sec:authorize="isAuthenticated()">
+                                <a class="dropdown-item" href="/user/profile">
+                                    <i class="bi bi-person-gear me-2"></i>Thông tin tài khoản
+                                </a>
+                            </li>
+                            <li sec:authorize="isAuthenticated()"><hr class="dropdown-divider"></li>
+                            <li sec:authorize="isAuthenticated()">
+                                <a class="dropdown-item" href="/invoices">
+                                    <i class="bi bi-receipt me-2"></i>Đơn hàng của tôi
+                                </a>
+                            </li>
+                            <li sec:authorize="isAuthenticated()"><hr class="dropdown-divider"></li>
+                            <li sec:authorize="isAuthenticated()">
+                                <form th:action="@{/logout}" method="post" class="d-inline w-100">
+                                    <button class="dropdown-item text-danger" type="submit">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                            <li sec:authorize="!isAuthenticated()">
+                                <a class="dropdown-item" href="/login">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+                                </a>
+                            </li>
+                            <li sec:authorize="!isAuthenticated()">
+                                <a class="dropdown-item" href="/register">
+                                    <i class="bi bi-person-plus me-2"></i>Đăng ký
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Mobile Toggle (Right side) -->
+                <button class="navbar-toggler d-lg-none ms-auto" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarMain" aria-controls="navbarMain"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div class="collapse navbar-collapse mt-3" id="navbarMain">
+                <!-- Mobile Search -->
+                <form action="/books/search" method="get" class="mb-3 d-lg-none" 
+                      sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                    <div class="input-group">
+                        <input class="form-control" type="search" name="keyword" 
+                               placeholder="Tìm kiếm sách, tác giả...">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
                 </form>
-                <div class="d-flex align-items-center">
-                    <li class="nav-item list-unstyled" sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-danger d-flex align-items-center"
-                                    type="submit">
-                                <i class="bi bi-box-arrow-right me-1"></i> Đăng Xuất
+
+                <!-- Mobile Navigation -->
+                <ul class="navbar-nav d-lg-none">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house-door me-2"></i>Trang Chủ
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <a class="nav-link" href="/books">
+                            <i class="bi bi-book me-2"></i>Tất cả sách
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-grid me-2"></i>Danh Mục Sách
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/books/search?categoryId=1">
+                                <i class="bi bi-bookmark me-2"></i>Văn học</a></li>
+                            <li><a class="dropdown-item" href="/books/search?categoryId=2">
+                                <i class="bi bi-lightbulb me-2"></i>Khoa học</a></li>
+                            <li><a class="dropdown-item" href="/books/search?categoryId=3">
+                                <i class="bi bi-people me-2"></i>Kỹ năng sống</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <a class="nav-link" href="/books?sort=createdDate,desc">
+                            <i class="bi bi-star me-2"></i>Sách Mới
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <a class="nav-link" href="/books?sort=sold,desc">
+                            <i class="bi bi-fire me-2"></i>Sách Bán Chạy
+                        </a>
+                    </li>
+                    
+                    <!-- Mobile User Actions -->
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <a class="nav-link" href="/wishlist">
+                            <i class="bi bi-heart me-2"></i>Danh sách yêu thích 
+                            <span id="mobileWishlistCount" class="badge bg-primary rounded-pill ms-1">0</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                        <a class="nav-link" href="/cart">
+                            <i class="bi bi-cart3 me-2"></i>Giỏ hàng
+                            <span class="badge bg-primary rounded-pill ms-1">0</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Mobile User Menu -->
+                    <li sec:authorize="isAuthenticated()">
+                        <hr class="dropdown-divider my-2">
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" href="/user/profile">
+                            <i class="bi bi-person-gear me-2"></i>Thông tin tài khoản
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" href="/invoices">
+                            <i class="bi bi-receipt me-2"></i>Đơn hàng của tôi
+                        </a>
+                    </li>
+                    
+                    <!-- Admin Menu for Mobile -->
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ADMIN')">
+                        <hr class="dropdown-divider my-2">
+                        <a class="nav-link dropdown-toggle text-danger" href="#" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-gear-fill me-2"></i>Quản Trị
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/admin/dashboard">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/books/add">
+                                <i class="bi bi-plus-circle me-2"></i>Thêm Sách</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin/categories">
+                                <i class="bi bi-grid-3x3-gap me-2"></i>Quản lý danh mục</a></li>
+                            <li><a class="dropdown-item" href="/admin/invoices">
+                                <i class="bi bi-clipboard-data me-2"></i>Quản lý đơn hàng</a></li>
+                            <li><a class="dropdown-item" href="/admin/inventory">
+                                <i class="bi bi-boxes me-2"></i>Quản lý kho</a></li>
+                            <li><a class="dropdown-item" href="/admin/users">
+                                <i class="bi bi-people me-2"></i>Quản lý users</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Mobile Logout -->
+                    <li sec:authorize="isAuthenticated()">
+                        <hr class="dropdown-divider my-2">
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" class="d-inline w-100">
+                            <button class="nav-link text-danger border-0 bg-transparent w-100 text-start" type="submit">
+                                <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
                             </button>
                         </form>
                     </li>
-                    <li class="nav-item list-unstyled" sec:authorize="!isAuthenticated()">
-                        <a class="btn btn-outline-primary d-flex align-items-center" href="/login">
-                            <i class="bi bi-person-circle me-1"></i> Đăng Nhập
+                    
+                    <!-- Mobile Login/Register -->
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" href="/login">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
                         </a>
                     </li>
-                </div>
+                    
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" href="/register">
+                            <i class="bi bi-person-plus me-2"></i>Đăng ký
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
@@ -100,21 +329,135 @@
 <div class="container my-4">
     <div th:fragment="content"></div>
 </div>
-<footer th:fragment="footer" class="footer mt-auto py-4">
-    <div class="container text-center">
-        <p class="mb-0">
-            <i class="bi bi-c-circle me-1"></i>
-            Copyright <span th:text="${#dates.year(#dates.createNow())}"></span>
-            <a href="https://www.facebook.com/tan.sang.951723/?locale=vi_VN" class="text-decoration-none">
-                <i class="bi bi-building me-1"></i>TanSang
-            </a>
-        </p>
-        <p class="mb-0 mt-2 small">
-            <i class="bi bi-book-fill me-1"></i> Hệ Thống Quản Lý Sách Hiện Đại
-        </p>
+
+<!-- Modern Professional Footer -->
+<footer th:fragment="footer" class="footer mt-auto">
+    <div class="footer-main">
+        <div class="container">
+            <div class="row g-4">
+                <!-- About E-BOOKS -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-heading">Về E-BOOKS</h5>
+                    <p class="footer-text">
+                        Hệ thống cung cấp sách trực tuyến hàng đầu Việt Nam. 
+                        Mang đến trải nghiệm mua sắm sách tuyệt vời nhất.
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-link"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-youtube"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Customer Support -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-heading">Hỗ Trợ Khách Hàng</h5>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Hướng dẫn đặt hàng</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Phương thức thanh toán</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Chính sách giao hàng</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Chính sách đổi trả</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+                
+                <!-- About Company -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-heading">Về Công Ty</h5>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Giới thiệu E-BOOKS</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Tuyển dụng</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Chính sách bảo mật</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Điều khoản sử dụng</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right"></i>Liên hệ</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact Info -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-heading">Liên Hệ</h5>
+                    <ul class="footer-contact">
+                        <li>
+                            <i class="bi bi-geo-alt"></i>
+                            <span>123 Đường ABC, Quận 1, TP.HCM</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-telephone"></i>
+                            <span>Hotline: 1900-xxxx</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-envelope"></i>
+                            <span>support@e-books.vn</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-clock"></i>
+                            <span>8:00 - 22:00 (Hàng ngày)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">
+                        <i class="bi bi-c-circle me-1"></i>
+                        <span th:text="${#dates.year(#dates.createNow())}"></span> E-BOOKS. 
+                        All Rights Reserved. 
+                        <a href="https://www.facebook.com/tan.sang.951723/?locale=vi_VN" 
+                           class="text-decoration-none developer-link">
+                            Developed by TanSang
+                        </a>
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
+                    <span class="badge bg-primary me-2 payment-method-badge">
+                        <i class="bi bi-credit-card me-1"></i>VISA
+                    </span>
+                    <span class="badge bg-success me-2 payment-method-badge">
+                        <i class="bi bi-credit-card-2-front me-1"></i>Mastercard
+                    </span>
+                    <span class="badge bg-warning text-dark me-2 payment-method-badge">
+                        <i class="bi bi-cash-coin me-1"></i>COD
+                    </span>
+                    <span class="badge bg-info text-dark payment-method-badge">
+                        <i class="bi bi-bank me-1"></i>Banking
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
     <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/wishlist.js}"></script>
+    <script th:src="@{/js/cart.js}"></script>
+    
+    <!-- Handle broken images -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle all image errors globally
+            document.querySelectorAll('img').forEach(function(img) {
+                img.addEventListener('error', function() {
+                    // Hide broken external placeholder images
+                    if (this.src && this.src.includes('placeholder.com')) {
+                        this.style.display = 'none';
+                        console.log('Hidden broken placeholder image:', this.src);
+                    } else {
+                        // For other broken images, set a fallback
+                        this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNTAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4=';
+                        this.style.height = 'auto';
+                        this.style.maxWidth = '100%';
+                    }
+                });
+            });
+        });
+    </script>
 </footer>
 </body>
 </html>

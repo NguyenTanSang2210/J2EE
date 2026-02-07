@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Danh Mục</title>
+    <th:block th:replace="~{layout::link-css}"></th:block>
+    <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
+</head>
+<body>
+<th:block th:replace="~{layout::header}"></th:block>
+
+<div class="container mt-4">
+    <!-- Error Message -->
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Page Header -->
+    <div class="d-flex align-items-center mb-4">
+        <a th:href="@{/admin/categories}" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="mb-0">
+            <i class="bi bi-plus-circle me-2"></i>Thêm Danh Mục Mới
+        </h2>
+    </div>
+    
+    <!-- Add Category Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>Thông Tin Danh Mục
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/categories/add}" 
+                          th:object="${category}" 
+                          method="post">
+                        
+                        <!-- Category Name -->
+                        <div class="mb-4">
+                            <label for="name" class="form-label fw-bold">
+                                <i class="bi bi-tag me-2"></i>Tên Danh Mục
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="name" 
+                                   th:field="*{name}"
+                                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                                   placeholder="Nhập tên danh mục (vd: Văn học, Khoa học, Kỹ năng sống...)"
+                                   maxlength="50"
+                                   required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                <span th:errors="*{name}"></span>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Tên danh mục từ 1-50 ký tự
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a th:href="@{/admin/categories}" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>Hủy Bỏ
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Thêm Danh Mục
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Card -->
+            <div class="card mt-3 bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>Gợi Ý
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Đặt tên danh mục ngắn gọn, dễ hiểu</li>
+                        <li>Tên danh mục nên phản ánh đúng chủ đề sách</li>
+                        <li>Không nên tạo quá nhiều danh mục trùng lặp</li>
+                        <li>Sau khi tạo, bạn có thể thêm sách vào danh mục này</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{layout::footer}"></th:block>

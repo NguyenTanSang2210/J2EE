@@ -54,9 +54,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(@NotNull HttpSecurity http) throws Exception {
         return http
-                // Disable CSRF only for REST API endpoints
+                // Disable CSRF only for REST API endpoints and wishlist operations
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**") // Allow all API endpoints (including webhooks)
+                        .ignoringRequestMatchers("/wishlist/**") // Allow wishlist operations (AJAX calls)
                 )
                 
                 // Configure authorization
@@ -75,7 +76,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN")
                         
                         // User and Admin endpoints - Web UI
-                        .requestMatchers("/books", "/cart/**").hasAnyAuthority("ADMIN", "USER")
+                        .requestMatchers("/books", "/cart/**", "/wishlist/**").hasAnyAuthority("ADMIN", "USER")
                         
                         // API v1 endpoints - Require JWT authentication
                         .requestMatchers("/api/v1/**").hasAnyAuthority("ADMIN", "USER")
@@ -118,21 +119,23 @@ public class SecurityConfig {
                                                 .oidcUserService(oAuthService)
                                 )
                                 .successHandler((request, response, authentication) -> {
+                                    // Log để debug authorities sau OAuth login
+                                    System.out.println("\n========== OAuth Success Handler ==========");
+                                    System.out.println("Authentication class: " + authentication.getClass().getName());
+                                    System.out.println("Principal class: " + authentication.getPrincipal().getClass().getName());
+                                    System.out.println("Authorities count: " + authentication.getAuthorities().size());
+                                    authentication.getAuthorities().forEach(auth -> {
+                                        System.out.println("  → Authority: " + auth.getAuthority());
+                                    });
+                                    
                                     var principal = authentication.getPrincipal();
-                                    String email = null;
-                                    String name = null;
-                                    
                                     if (principal instanceof org.springframework.security.oauth2.core.oidc.user.OidcUser oidcUser) {
-                                        email = oidcUser.getEmail();
-                                        name = oidcUser.getName();
-                                    } else if (principal instanceof OAuth2User oauth2User) {
-                                        email = oauth2User.getAttribute("email");
-                                        name = oauth2User.getAttribute("name");
+                                        System.out.println("Email: " + oidcUser.getEmail());
+                                        System.out.println("Name: " + oidcUser.getName());
                                     }
+                                    System.out.println("========== End OAuth Success Handler ==========\n");
                                     
-                                    if (email != null && name != null) {
-                                        userService.saveOauthUser(email, name);
-                                    }
+                                    // OAuthService đã xử lý việc tạo user, không cần gọi lại
                                     response.sendRedirect("/");
                                 })
                                 .permitAll()

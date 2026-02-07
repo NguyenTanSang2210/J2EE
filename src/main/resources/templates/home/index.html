@@ -1,140 +1,444 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Chủ - Ứng Dụng Quản Lý Sách</title>
+    <title>E-BOOKS - Modern Professional Bookstore</title>
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
     <style>
-        .hero-section {
-            background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
-            color: white;
-            padding: 4rem 2rem;
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d47a1 100%);
             border-radius: 20px;
+            overflow: hidden;
             margin: 2rem 0;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            box-shadow: 0 12px 32px rgba(30, 136, 229, 0.25);
         }
-        .hero-section h1 {
-            font-size: 3rem;
+        
+        .hero-content {
+            padding: 4rem 3rem;
+            color: white;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
             font-weight: 800;
             margin-bottom: 1rem;
-            color: white;
-            -webkit-text-fill-color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+            line-height: 1.2;
         }
-        .hero-section p {
-            font-size: 1.25rem;
+        
+        .hero-subtitle {
+            font-size: 1.375rem;
+            margin-bottom: 2rem;
             opacity: 0.95;
         }
-        .feature-card {
-            background: white;
-            border-radius: 15px;
+        
+        .hero-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 2rem;
-            margin: 1rem 0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+        }
+        
+        .hero-image i {
+            font-size: 15rem;
+            opacity: 0.15;
+        }
+        
+        /* Category Cards */
+        .category-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
             text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 2px solid transparent;
         }
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 25px rgba(0,0,0,0.15);
+        
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--card-hover-shadow);
+            border-color: var(--primary-color);
         }
-        .feature-icon {
-            font-size: 3rem;
-            background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        
+        .category-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.5rem;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+        
+        .category-card:hover .category-icon {
+            transform: scale(1.1) rotate(10deg);
+        }
+        
+        .category-icon.cat-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .category-icon.cat-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .category-icon.cat-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .category-icon.cat-4 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .category-icon.cat-5 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .category-icon.cat-6 {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+        
+        .category-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .category-desc {
+            color: var(--gray-600);
+            font-size: 0.9375rem;
+        }
+        
+        /* Section Title */
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--accent-color);
+            border-radius: 2px;
+        }
+        
+        .section-subtitle {
+            color: var(--gray-600);
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Why Choose Us */
+        .feature-box {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .feature-box:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover-shadow);
+        }
+        
+        .feature-box-icon {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-box h4 {
+            font-size: 1.375rem;
+            font-weight: 700;
             margin-bottom: 1rem;
+            color: var(--dark-color);
         }
-        .feature-card h3 {
-            color: #1F2937;
-            font-size: 1.5rem;
+        
+        .feature-box p {
+            color: var(--gray-600);
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+            border-radius: 20px;
+            padding: 4rem 3rem;
+            text-align: center;
+            color: white;
+            box-shadow: 0 12px 32px rgba(255, 152, 0, 0.25);
+            margin: 3rem 0;
+        }
+        
+        .cta-section h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
             margin-bottom: 1rem;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.15);
         }
-        .feature-card p {
-            color: #6B7280;
-            margin-bottom: 0;
+        
+        .cta-section p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+        
+        .cta-section .btn {
+            margin: 0.5rem;
+            padding: 1rem 2.5rem;
+            font-size: 1.125rem;
+        }
+        
+        @media (max-width: 992px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.125rem;
+            }
+            
+            .hero-content {
+                padding: 3rem 2rem;
+            }
+            
+            .hero-image i {
+                font-size: 10rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .hero-content {
+                padding: 2rem 1.5rem;
+            }
+            
+            .hero-image {
+                display: none;
+            }
+            
+            .section-title {
+                font-size: 1.75rem;
+            }
+            
+            .cta-section {
+                padding: 3rem 2rem;
+            }
+            
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+            
+            .cta-section p {
+                font-size: 1.125rem;
+            }
         }
     </style>
 </head>
 <body>
 <th:block th:replace="~{layout::header}"></th:block>
-<div class="container">
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <i class="bi bi-book-fill" style="font-size: 4rem; margin-bottom: 1rem;"></i>
-        <h1>Hệ Thống Quản Lý Sách Hiện Đại</h1>
-        <p class="lead mb-0">Giải pháp toàn diện cho việc quản lý thư viện và bán sách trực tuyến</p>
+
+<div class="container-xxl">
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+        <div class="row g-0 align-items-center">
+            <div class="col-lg-7">
+                <div class="hero-content">
+                    <h1 class="hero-title">Khám Phá Thế Giới Tri Thức</h1>
+                    <p class="hero-subtitle">
+                        Hàng ngàn cuốn sách chất lượng cao. Giao hàng nhanh chóng. 
+                        Ưu đãi hấp dẫn mỗi ngày.
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="/books" class="btn btn-accent btn-lg" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                            <i class="bi bi-book me-2"></i>Khám Phá Ngay
+                        </a>
+                        <a href="/login" class="btn btn-outline-light btn-lg" sec:authorize="!isAuthenticated()">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Đăng Nhập
+                        </a>
+                        <a href="/books?sort=createdDate,desc" class="btn btn-outline-light btn-lg" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+                            <i class="bi bi-star me-2"></i>Sách Mới
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="hero-image">
+                    <i class="bi bi-book-half"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Features Section -->
-    <div class="row mt-5">
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="bi bi-speedometer2 feature-icon"></i>
-                <h3>Quản Lý Nhanh Chóng</h3>
-                <p>Thêm, sửa, xóa sách một cách dễ dàng và nhanh chóng với giao diện trực quan</p>
+    <!-- Categories Section -->
+    <section class="my-5" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Danh Mục Sách</h2>
+            <p class="section-subtitle">Khám phá các thể loại sách phong phú</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="/books?sort=sold,desc" class="text-decoration-none">
+                    <div class="category-card">
+                        <div class="category-icon cat-1">
+                            <i class="bi bi-fire"></i>
+                        </div>
+                        <h5 class="category-title">Bán Chạy</h5>
+                        <p class="category-desc">Hot nhất</p>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="/books?sort=createdDate,desc" class="text-decoration-none">
+                    <div class="category-card">
+                        <div class="category-icon cat-2">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <h5 class="category-title">Sách Mới</h5>
+                        <p class="category-desc">Mới phát hành</p>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="/books/search?categoryId=1" class="text-decoration-none">
+                    <div class="category-card">
+                        <div class="category-icon cat-3">
+                            <i class="bi bi-bookmark"></i>
+                        </div>
+                        <h5 class="category-title">Văn Học</h5>
+                        <p class="category-desc">Truyện, thơ</p>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="/books/search?categoryId=2" class="text-decoration-none">
+                    <div class="category-card">
+                        <div class="category-icon cat-4">
+                            <i class="bi bi-lightbulb"></i>
+                        </div>
+                        <h5 class="category-title">Khoa Học</h5>
+                        <p class="category-desc">Tri thức</p>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="/books/search?categoryId=3" class="text-decoration-none">
+                    <div class="category-card">
+                        <div class="category-icon cat-5">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h5 class="category-title">Kỹ Năng</h5>
+                        <p class="category-desc">Phát triển</p>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="/books" class="text-decoration-none">
+                    <div class="category-card">
+                        <div class="category-icon cat-6">
+                            <i class="bi bi-grid"></i>
+                        </div>
+                        <h5 class="category-title">Tất Cả</h5>
+                        <p class="category-desc">Xem thêm</p>
+                    </div>
+                </a>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="bi bi-shield-check feature-icon"></i>
-                <h3>Bảo Mật Cao</h3>
-                <p>Hệ thống xác thực và phân quyền người dùng đảm bảo an toàn dữ liệu</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="bi bi-cart-check feature-icon"></i>
-                <h3>Giỏ Hàng Thông Minh</h3>
-                <p>Quản lý giỏ hàng và thanh toán đơn giản, tiện lợi cho người dùng</p>
-            </div>
-        </div>
-    </div>
+    </section>
 
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="bi bi-search feature-icon"></i>
-                <h3>Tìm Kiếm Mạnh Mẽ</h3>
-                <p>Tìm kiếm sách theo tên, tác giả, danh mục một cách nhanh chóng và chính xác</p>
+    <!-- Why Choose E-BOOKS -->
+    <section class="my-5 py-5">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Tại Sao Chọn E-BOOKS?</h2>
+            <p class="section-subtitle">Những lý do khiến chúng tôi trở nên khác biệt</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-box">
+                    <i class="bi bi-truck feature-box-icon"></i>
+                    <h4>Giao Hàng Nhanh</h4>
+                    <p>Giao hàng nhanh chóng trong 24h với đơn hàng nội thành</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-box">
+                    <i class="bi bi-shield-check feature-box-icon"></i>
+                    <h4>Đảm Bảo Chất Lượng</h4>
+                    <p>100% sách chính hãng, nguồn gốc rõ ràng</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-box">
+                    <i class="bi bi-percent feature-box-icon"></i>
+                    <h4>Ưu Đãi Hấp Dẫn</h4>
+                    <p>Nhiều chương trình khuyến mãi và giảm giá đặc biệt</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-box">
+                    <i class="bi bi-headset feature-box-icon"></i>
+                    <h4>Hỗ Trợ 24/7</h4>
+                    <p>Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ</p>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="bi bi-graph-up feature-icon"></i>
-                <h3>Sắp Xếp Linh Hoạt</h3>
-                <p>Sắp xếp danh sách sách theo nhiều tiêu chí khác nhau để dễ dàng quản lý</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <i class="bi bi-database feature-icon"></i>
-                <h3>Kết Nối MySQL</h3>
-                <p>Lưu trữ dữ liệu an toàn với cơ sở dữ liệu MySQL hiệu suất cao</p>
-            </div>
-        </div>
-    </div>
+    </section>
 
     <!-- Call to Action -->
-    <div class="text-center my-5">
-        <div class="card" style="background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%); border: none;">
-            <div class="card-body py-5">
-                <h2 class="text-white mb-4">Bắt Đầu Ngay Hôm Nay!</h2>
-                <p class="text-white mb-4">Khám phá hệ thống quản lý sách chuyên nghiệp của chúng tôi</p>
-                <a href="/books" class="btn btn-light btn-lg me-2">
-                    <i class="bi bi-journal-text me-2"></i>Xem Danh Sách Sách
-                </a>
-                <a href="/login" class="btn btn-outline-light btn-lg">
-                    <i class="bi bi-person-circle me-2"></i>Đăng Nhập
-                </a>
-            </div>
-        </div>
+    <div class="cta-section">
+        <h2>Bắt Đầu Hành Trình Đọc Sách Ngay Hôm Nay!</h2>
+        <p>Hàng ngàn đầu sách đang chờ bạn khám phá</p>
+        <a href="/books" class="btn btn-light btn-lg" sec:authorize="hasAnyAuthority('ADMIN','USER')">
+            <i class="bi bi-book me-2"></i>Xem Tất Cả Sách
+        </a>
+        <a href="/register" class="btn btn-outline-light btn-lg" sec:authorize="!isAuthenticated()">
+            <i class="bi bi-person-plus me-2"></i>Đăng Ký Ngay
+        </a>
     </div>
 </div>
+
 <th:block th:replace="~{layout::footer}"></th:block>
 </body>
 </html>

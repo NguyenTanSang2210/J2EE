@@ -1,11 +1,13 @@
 package nhom2.QLS.repositories;
 import nhom2.QLS.entities.Invoice;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public interface IInvoiceRepository extends JpaRepository<Invoice,Long>{
@@ -38,4 +40,15 @@ public interface IInvoiceRepository extends JpaRepository<Invoice,Long>{
         @Param("status") String status,
         @Param("bookId") Long bookId
     );
+    
+    // Tính tổng doanh thu theo năm và tháng
+    @Query("SELECT SUM(i.price) FROM Invoice i WHERE YEAR(i.invoiceDate) = :year " +
+           "AND MONTH(i.invoiceDate) = :month AND i.status = 'COMPLETED'")
+    Double sumRevenueByYearAndMonth(@Param("year") int year, @Param("month") int month);
+    
+    // Lấy danh sách đơn hàng gần đây
+    @Query("SELECT new map(i.id as id, i.invoiceDate as date, i.price as total, " +
+           "i.status as status, u.username as username) " +
+           "FROM Invoice i JOIN i.user u ORDER BY i.invoiceDate DESC")
+    List<Map<String, Object>> findRecentOrders(Pageable pageable);
 }

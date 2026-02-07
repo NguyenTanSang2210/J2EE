@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Users</title>
+    <th:block th:replace="~{layout::link-css}"></th:block>
+    <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
+</head>
+<body>
+<th:block th:replace="~{layout::header}"></th:block>
+
+<div class="container mt-4">
+            <h2 class="mb-4">
+                <i class="bi bi-people-fill me-2"></i>Quản lý người dùng
+            </h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Provider</th>
+                                    <th>Roles</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users.content}">
+                                    <td th:text="${user.id}">1</td>
+                                    <td th:text="${user.username}">Username</td>
+                                    <td th:text="${user.email}">email@example.com</td>
+                                    <td th:text="${user.phone}">0123456789</td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${user.provider == 'GOOGLE'} ? 'bg-danger' : 'bg-secondary'"
+                                              th:text="${user.provider != null ? user.provider : 'LOCAL'}">
+                                            LOCAL
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:each="role : ${user.roles}" 
+                                              class="badge bg-primary me-1" 
+                                              th:text="${role.name}">
+                                            ROLE
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" 
+                                              method="post" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Xác nhận xóa user này?')">
+                                            <button type="submit" class="btn btn-sm btn-danger" 
+                                                    th:disabled="${#lists.contains(user.roles, 'ADMIN')}">
+                                                <i class="bi bi-trash me-1"></i>Xóa
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(users.content)}">
+                                    <td colspan="7" class="text-center">Không có người dùng nào</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <nav th:if="${users.totalPages > 1}" aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:classappend="${users.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/users(page=${users.number - 1}, size=${users.size})}" 
+                                   tabindex="-1">
+                                    <i class="bi bi-chevron-left me-1"></i>Trước
+                                </a>
+                            </li>
+                            
+                            <!-- First page -->
+                            <li class="page-item" th:if="${users.number > 2}">
+                                <a class="page-link" th:href="@{/admin/users(page=0, size=${users.size})}">1</a>
+                            </li>
+                            <li class="page-item disabled" th:if="${users.number > 3}">
+                                <span class="page-link">...</span>
+                            </li>
+                            
+                            <!-- Current and adjacent pages -->
+                            <th:block th:each="i : ${#numbers.sequence(users.number - 2, users.number + 2)}">
+                                <li class="page-item" 
+                                    th:if="${i >= 0 && i < users.totalPages}"
+                                    th:classappend="${i == users.number} ? 'active'">
+                                    <a class="page-link" 
+                                       th:href="@{/admin/users(page=${i}, size=${users.size})}" 
+                                       th:text="${i + 1}">1</a>
+                                </li>
+                            </th:block>
+                            
+                            <!-- Last page -->
+                            <li class="page-item disabled" th:if="${users.number < users.totalPages - 4}">
+                                <span class="page-link">...</span>
+                            </li>
+                            <li class="page-item" th:if="${users.number < users.totalPages - 3}">
+                                <a class="page-link" 
+                                   th:href="@{/admin/users(page=${users.totalPages - 1}, size=${users.size})}"
+                                   th:text="${users.totalPages}">Last</a>
+                            </li>
+                            
+                            <li class="page-item" th:classappend="${users.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/users(page=${users.number + 1}, size=${users.size})}">
+                                    Sau<i class="bi bi-chevron-right ms-1"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <!-- Page info -->
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                Trang <span th:text="${users.number + 1}">1</span> 
+                                / <span th:text="${users.totalPages}">1</span>
+                                (Tổng <span th:text="${users.totalElements}">0</span> người dùng)
+                            </small>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+<th:block th:replace="~{layout::footer}"></th:block>
+</body>
+</html>

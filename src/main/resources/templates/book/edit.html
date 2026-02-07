@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
     <title>Chỉnh Sửa Sách</title>
 </head>
 <body>
@@ -16,8 +17,9 @@
             <div class="card">
                 <div class="card-body">
                     <h1 class="text-center mb-4"><i class="bi bi-pencil-square me-2"></i>Chỉnh Sửa Sách</h1>
-                    <form th:action="@{/books/edit}" th:object="${book}" method="post">
+                    <form th:action="@{/books/edit}" th:object="${book}" method="post" enctype="multipart/form-data">
                         <input type="hidden" th:field="*{id}">
+                        <input type="hidden" name="currentImageUrl" th:value="${book.imageUrl}">
                         <div class="mb-3">
                             <label class="form-label" for="title">
                                 <i class="bi bi-book me-1"></i>Tên Sách:
@@ -67,6 +69,68 @@
                             <span class="text-danger" th:if="${#fields.hasErrors('stock')}"
                                   th:errors="*{stock}"></span>
                         </div>
+                        
+                        <!-- ========== PHẦN HÌNH ẢNH SÁCH (EDIT) ========== -->
+                        <div class="mb-4">
+                            <h5 class="mb-3"><i class="bi bi-image me-2"></i>Hình Ảnh Sách</h5>
+                            
+                            <!-- Hiển thị ảnh hiện tại -->
+                            <div class="mb-3">
+                                <p class="mb-2"><strong>Ảnh hiện tại:</strong></p>
+                                <img th:src="${book.imageUrl}" 
+                                     class="img-thumbnail mb-2" 
+                                     style="width: 150px; height: 200px; object-fit: cover;"
+                                     alt="Ảnh hiện tại">
+                                <div class="text-muted small" th:if="${book.imageUrl != null and !book.imageUrl.isEmpty()}">
+                                    <span th:if="${book.imageUrl.startsWith('http')}" class="text-info">🌐 Link online</span>
+                                    <span th:if="${book.imageUrl.startsWith('data:image')}" class="text-primary">📷 Data URI (base64)</span>
+                                    <span th:if="${!book.imageUrl.startsWith('http') and !book.imageUrl.startsWith('data:image')}" class="text-success">📁 File upload</span>
+                                    <br>
+                                    <small th:if="${book.imageUrl.startsWith('data:image')}" class="text-truncate d-block" style="max-width: 300px;" 
+                                           th:title="${book.imageUrl}">Base64 image data (click to see full)</small>
+                                    <small th:unless="${book.imageUrl.startsWith('data:image')}" class="text-break" th:text="${book.imageUrl}"></small>
+                                </div>
+                            </div>
+                            
+                            <!-- Input Link Ảnh Mới (Ưu tiên) -->
+                            <div class="mb-3">
+                                <label class="form-label" for="imageUrl">
+                                    <i class="bi bi-link me-1"></i>Thay đổi bằng link ảnh mới (Ưu tiên):
+                                </label>
+                                <input class="form-control" type="url" 
+                                       th:field="*{imageUrl}" id="imageUrl" 
+                                       placeholder="https://example.com/new-image.jpg"
+                                       oninput="handleImageUrlInputEdit()">
+                                <div class="form-text">
+                                    <strong>Cách 1:</strong> Nhập link ảnh mới → hệ thống sẽ dùng link này và xóa ảnh upload cũ (nếu có).
+                                </div>
+                            </div>
+                            
+                            <!-- Input File Upload Mới (Fallback) -->
+                            <div class="mb-3">
+                                <label class="form-label" for="imageFile">
+                                    <i class="bi bi-upload me-1"></i>Hoặc tải lên file ảnh mới:
+                                </label>
+                                <input class="form-control" type="file" 
+                                       id="imageFile" name="imageFile"
+                                       accept="image/jpeg,image/jpg,image/png,image/gif"
+                                       onchange="handleFileInputEdit(this)">
+                                <div class="form-text">
+                                    <strong>Cách 2:</strong> Tải file mới → thay thế ảnh hiện tại. Để trống nếu không thay đổi.
+                                </div>
+                            </div>
+                            
+                            <!-- Preview Ảnh Mới -->
+                            <div class="text-center">
+                                <p class="mb-2"><strong>Xem trước ảnh mới:</strong></p>
+                                <img id="imagePreview" th:src="${book.imageUrl}"
+                                     class="img-thumbnail" 
+                                     style="width: 200px; height: 250px; object-fit: cover;"
+                                     alt="Preview ảnh mới">
+                                <div id="imageSource" class="text-muted mt-1">Ảnh hiện tại (chưa thay đổi)</div>
+                            </div>
+                        </div>
+                        
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-save me-2"></i>Cập Nhật
@@ -82,5 +146,114 @@
     </div>
 </div>
 <th:block th:replace="~{layout::footer}"></th:block>
+
+<!-- JavaScript xử lý preview ảnh cho Edit -->
+<script>
+    // Lưu ảnh gốc để reset về
+    const originalImageUrl = document.getElementById('imageUrl').value || '/images/books/default-book.svg';
+    
+    // Xử lý khi nhập link ảnh mới
+    function handleImageUrlInputEdit() {
+        const imageUrlInput = document.getElementById('imageUrl');
+        const imageFileInput = document.getElementById('imageFile');
+        const preview = document.getElementById('imagePreview');
+        const source = document.getElementById('imageSource');
+        
+        const newImageUrl = imageUrlInput.value.trim();
+        
+        if (newImageUrl && newImageUrl !== originalImageUrl) {
+            // Có link mới → Preview theo link mới, clear file input
+            preview.src = newImageUrl;
+            
+            // Check if it's a Data URI (base64)
+            if (newImageUrl.startsWith('data:image/')) {
+                source.textContent = 'Data URI (base64 image) - sẽ thay thế ảnh cũ';
+                source.className = 'text-primary mt-1 fw-bold';
+            } else {
+                source.textContent = 'Link ảnh mới (sẽ thay thế ảnh cũ)';
+                source.className = 'text-success mt-1 fw-bold';
+            }
+            
+            // Clear file input vì link có ưu tiên
+            imageFileInput.value = '';
+        } else if (newImageUrl === originalImageUrl) {
+            // Về ảnh gốc
+            preview.src = originalImageUrl;
+            source.textContent = 'Ảnh hiện tại (chưa thay đổi)';
+            source.className = 'text-muted mt-1';
+        } else {
+            // Trống → Về ảnh gốc
+            preview.src = originalImageUrl;
+            source.textContent = 'Ảnh hiện tại (chưa thay đổi)';
+            source.className = 'text-muted mt-1';
+        }
+    }
+    
+    // Xử lý khi chọn file mới
+    function handleFileInputEdit(input) {
+        const imageUrlInput = document.getElementById('imageUrl');
+        const preview = document.getElementById('imagePreview');
+        const source = document.getElementById('imageSource');
+        
+        // Nếu có link ảnh mới thì ưu tiên link
+        const newImageUrl = imageUrlInput.value.trim();
+        if (newImageUrl && newImageUrl !== originalImageUrl) {
+            alert('Bạn đã nhập link ảnh mới! Hệ thống sẽ ưu tiên dùng link và bỏ qua file upload.');
+            input.value = ''; // Clear file
+            return;
+        }
+        
+        // Preview file nếu không có link mới
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File quá lớn! Tối đa 5MB.');
+                input.value = '';
+                return;
+            }
+            
+            // Preview file mới
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                source.textContent = 'File ảnh mới (' + file.name + ') - sẽ thay thế ảnh cũ';
+                source.className = 'text-info mt-1 fw-bold';
+            };
+            reader.readAsDataURL(file);
+            
+            // Clear image URL để không conflict
+            imageUrlInput.value = '';
+        } else {
+            // Không có file → Về ảnh gốc
+            preview.src = originalImageUrl;
+            source.textContent = 'Ảnh hiện tại (chưa thay đổi)';
+            source.className = 'text-muted mt-1';
+        }
+    }
+    
+    // Xử lý lỗi load ảnh
+    document.getElementById('imagePreview').onerror = function() {
+        this.src = '/images/books/default-book.svg';
+        document.getElementById('imageSource').textContent = 'Link không hợp lệ - Dùng ảnh mặc định';
+        document.getElementById('imageSource').className = 'text-warning mt-1';
+    };
+    
+    // Reset nút để về ảnh gốc
+    function resetImageToOriginal() {
+        const imageUrlInput = document.getElementById('imageUrl');
+        const imageFileInput = document.getElementById('imageFile');
+        const preview = document.getElementById('imagePreview');
+        const source = document.getElementById('imageSource');
+        
+        imageUrlInput.value = originalImageUrl;
+        imageFileInput.value = '';
+        preview.src = originalImageUrl;
+        source.textContent = 'Ảnh hiện tại (chưa thay đổi)';
+        source.className = 'text-muted mt-1';
+    }
+</script>
+
 </body>
 </html>

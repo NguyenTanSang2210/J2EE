@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông Tin Tài Khoản - E-BOOKS</title>
+    <link th:fragment="link-css" rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link th:fragment="custom-css" rel="stylesheet" th:href="@{/css/style.css}">
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
+    
+    <style>
+        .profile-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 3rem;
+        }
+        
+        .profile-form .form-label {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(30, 136, 229, 0.25);
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            transition: background-color 0.3s ease;
+        }
+        
+        .info-item:hover {
+            background-color: var(--gray-100);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .info-content {
+            flex: 1;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+        
+        .info-value {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        .btn-edit-profile {
+            background: linear-gradient(135deg, var(--accent-color), #f57c00);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-edit-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 152, 0, 0.3);
+            color: white;
+        }
+        
+        .btn-save-profile {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-save-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+            color: white;
+        }
+        
+        .btn-cancel {
+            background: var(--gray-500);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-cancel:hover {
+            background: var(--gray-600);
+            color: white;
+        }
+        
+        .security-card {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 1px solid #f59e0b;
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .security-card .bi {
+            color: #f59e0b;
+        }
+        
+        .alert-custom {
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        
+        .form-section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{layout::header}"></th:block>
+
+<div class="container-xxl my-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+            <li class="breadcrumb-item active">Thông tin tài khoản</li>
+        </ol>
+    </nav>
+    
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <i class="bi bi-person-circle"></i>
+        </div>
+        <h2 class="mb-1" th:text="${user.username}">Username</h2>
+        <p class="mb-0" th:text="${user.email}">email@example.com</p>
+    </div>
+    
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="alert alert-success alert-custom alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    
+    <div th:if="${error}" class="alert alert-danger alert-custom alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-lg-8">
+            <div class="profile-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4><i class="bi bi-person me-2"></i>Thông tin cá nhân</h4>
+                    <button class="btn btn-edit-profile" id="editBtn" onclick="toggleEditMode()">
+                        <i class="bi bi-pencil me-1"></i>Chỉnh sửa
+                    </button>
+                </div>
+                
+                <!-- View Mode -->
+                <div id="viewMode">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="bi bi-person"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Tên người dùng</div>
+                            <div class="info-value" th:text="${user.username}">username</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Email</div>
+                            <div class="info-value" th:text="${user.email}">email@example.com</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="bi bi-phone"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Số điện thoại</div>
+                            <div class="info-value" th:text="${user.phone != null ? user.phone : 'Chưa cập nhật'}">Chưa cập nhật</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Phương thức đăng nhập</div>
+                            <div class="info-value">
+                                <span th:if="${user.provider == null or user.provider == 'Local'}" class="badge bg-primary">
+                                    <i class="bi bi-key me-1"></i>Tài khoản thường
+                                </span>
+                                <span th:if="${user.provider == 'Google'}" class="badge bg-danger">
+                                    <i class="bi bi-google me-1"></i>Google
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Mode -->
+                <div id="editMode" style="display: none;">
+                    <form th:action="@{/user/profile}" method="post" th:object="${user}">
+                        <input type="hidden" th:field="*{id}">
+                        
+                        <div class="form-section">
+                            <h5 class="form-section-title">Thông tin cơ bản</h5>
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Tên người dùng
+                                </label>
+                                <input type="text" class="form-control" id="username" 
+                                       th:field="*{username}" readonly>
+                                <small class="form-text text-muted">Tên người dùng không thể thay đổi</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="bi bi-envelope me-1"></i>Email
+                                </label>
+                                <input type="email" class="form-control" id="email" 
+                                       th:field="*{email}" required>
+                                <div class="invalid-feedback">
+                                    Vui lòng nhập email hợp lệ
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">
+                                    <i class="bi bi-phone me-1"></i>Số điện thoại
+                                </label>
+                                <input type="tel" class="form-control" id="phone" 
+                                       th:field="*{phone}" placeholder="Nhập số điện thoại">
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-save-profile">
+                                <i class="bi bi-check-lg me-1"></i>Lưu thay đổi
+                            </button>
+                            <button type="button" class="btn btn-cancel" onclick="toggleEditMode()">
+                                <i class="bi bi-x-lg me-1"></i>Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security & Additional Info -->
+        <div class="col-lg-4">
+            <!-- Security Card -->
+            <div class="security-card mb-4">
+                <h5><i class="bi bi-shield-lock me-2"></i>Bảo mật tài khoản</h5>
+                <p class="mb-3">Bảo vệ tài khoản của bạn bằng cách cập nhật mật khẩu định kỳ</p>
+                <a href="#" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <i class="bi bi-key me-1"></i>Đổi mật khẩu
+                </a>
+            </div>
+            
+            <!-- Account Stats -->
+            <div class="profile-card">
+                <h5><i class="bi bi-graph-up me-2"></i>Thống kê tài khoản</h5>
+                <div class="info-item">
+                    <div class="info-icon bg-success">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Số sách đã mua</div>
+                        <div class="info-value">0</div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-icon bg-danger">
+                        <i class="bi bi-heart"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Sách yêu thích</div>
+                        <div class="info-value">
+                            <span id="wishlistCount">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-icon bg-info">
+                        <i class="bi bi-star"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Đánh giá đã viết</div>
+                        <div class="info-value">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-key me-2"></i>Đổi mật khẩu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/user/change-password}" method="post">
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="currentPassword" class="form-label">Mật khẩu hiện tại</label>
+                    <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                </div>
+                <div class="mb-3">
+                    <label for="newPassword" class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-control" id="newPassword" name="newPassword" required minlength="6">
+                </div>
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="6">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary">Đổi mật khẩu</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{layout::footer}"></th:block>
+
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+<script>
+    function toggleEditMode() {
+        const viewMode = document.getElementById('viewMode');
+        const editMode = document.getElementById('editMode');
+        const editBtn = document.getElementById('editBtn');
+        
+        if (viewMode.style.display === 'none') {
+            // Switch to view mode
+            viewMode.style.display = 'block';
+            editMode.style.display = 'none';
+            editBtn.innerHTML = '<i class="bi bi-pencil me-1"></i>Chỉnh sửa';
+            editBtn.className = 'btn btn-edit-profile';
+        } else {
+            // Switch to edit mode
+            viewMode.style.display = 'none';
+            editMode.style.display = 'block';
+            editBtn.innerHTML = '<i class="bi bi-eye me-1"></i>Xem thông tin';
+            editBtn.className = 'btn btn-outline-secondary';
+        }
+    }
+    
+    // Load wishlist count
+    fetch('/wishlist/count')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('wishlistCount').textContent = data.count;
+        })
+        .catch(error => console.error('Error loading wishlist count:', error));
+        
+    // Password confirmation validation
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = this.value;
+        
+        if (newPassword !== confirmPassword) {
+            this.setCustomValidity('Mật khẩu xác nhận không khớp');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+</script>
+</body>
+</html>

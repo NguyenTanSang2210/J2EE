@@ -78,16 +78,22 @@ public class UserService implements UserDetailsService {
             return;
         }
         
-        // Kiểm tra xem username đã tồn tại chưa
-        if (userRepository.findByUsername(username).isPresent()) {
-            return;
+        // Xử lý username trùng lặp: thêm số vào cuối nếu đã tồn tại
+        String finalUsername = username;
+        int counter = 1;
+        while (userRepository.findByUsername(finalUsername).isPresent()) {
+            finalUsername = username + counter;
+            counter++;
+            log.info("Username '{}' đã tồn tại, thử '{}'", username, finalUsername);
         }
         
-        // Tạo user mới nếu cả email và username đều chưa tồn tại
+        log.info("Tạo OAuth user mới với username: '{}', email: '{}'", finalUsername, email);
+        
+        // Tạo user mới
         var user = new User();
-        user.setUsername(username);
+        user.setUsername(finalUsername);
         user.setEmail(email);
-        user.setPassword(new BCryptPasswordEncoder().encode(username));
+        user.setPassword(new BCryptPasswordEncoder().encode(finalUsername));
         user.setProvider(Provider.GOOGLE.value);
         user.getRoles().add(roleRepository.findRoleById(Role.USER.value));
         userRepository.save(user);
@@ -118,5 +124,47 @@ public class UserService implements UserDetailsService {
     // Kiểm tra phone đã tồn tại
     public boolean existsByPhone(String phone) {
         return userRepository.existsByPhone(phone);
+    }
+    
+    /**
+     * Lấy danh sách tất cả users với phân trang (cho admin)
+     */
+    public org.springframework.data.domain.Page<User> getAllUsers(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = 
+            org.springframework.data.domain.PageRequest.of(page, size, 
+                org.springframework.data.domain.Sort.by("id").descending());
+        return userRepository.findAll(pageable);
+    }
+    
+    /**
+     * Xóa user theo ID (cho admin)
+     */
+    @Transactional(isolation = Isolation.SERIALIZABLE,
+            rollbackFor = {Exception.class, Throwable.class})
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+    
+    /**
+     * Cập nhật thông tin user
+     */
+    @Transactional(isolation = Isolation.SERIALIZABLE,
+            rollbackFor = {Exception.class, Throwable.class})
+    public void updateUser(@NotNull User user) {
+        userRepository.save(user);
+    }
+    
+    /**
+     * Tìm user theo username, trả về User (không phải Optional)
+     */
+    public User findUserByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
+    }
+    
+    /**
+     * Tìm user theo email, trả về User (không phải Optional)
+     */
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
     }
 }

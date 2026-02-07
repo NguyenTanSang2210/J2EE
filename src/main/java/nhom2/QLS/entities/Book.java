@@ -52,6 +52,9 @@ public class Book {
     @Builder.Default
     private Boolean isAvailable = true;
 
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     @ToString.Exclude
     @Builder.Default
@@ -106,6 +109,13 @@ public class Book {
 
     public int getTotalReviews() {
         return reviews != null ? reviews.size() : 0;
+    }
+
+    // Image URL management - Return safe image URL or default
+    public String getImageUrl() {
+        return (imageUrl != null && !imageUrl.isEmpty()) 
+            ? imageUrl 
+            : "/images/books/default-book.svg";
     }
 
     @Override

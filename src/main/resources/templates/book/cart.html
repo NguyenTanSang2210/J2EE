@@ -4,70 +4,236 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giỏ Hàng</title>
+    <title>Giỏ Hàng - E-BOOKS</title>
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
+    <style>
+        .cart-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .cart-item:hover {
+            box-shadow: var(--card-hover-shadow);
+        }
+        
+        .cart-item-image {
+            width: 100px;
+            height: 133px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .cart-item-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .cart-item-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 2px solid var(--gray-300);
+            background: white;
+            color: var(--dark-color);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quantity-btn:hover {
+            border-color: var(--primary-color);
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            font-weight: 600;
+            border: 2px solid var(--gray-200);
+            border-radius: 6px;
+            padding: 0.375rem;
+        }
+        
+        .cart-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            position: sticky;
+            top: 120px;
+        }
+        
+        .cart-summary-title {
+            font-size: 1.375rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+        }
+        
+        .cart-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .cart-summary-row:last-child {
+            border-bottom: none;
+            padding-top: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .cart-summary-label {
+            color: var(--gray-700);
+        }
+        
+        .cart-summary-value {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .cart-summary-total {
+            color: var(--accent-color);
+        }
+        
+        @media (max-width: 768px) {
+            .cart-item-image {
+                width: 80px;
+                height: 106px;
+            }
+            
+            .cart-summary {
+                position: static;
+            }
+        }
+    </style>
 </head>
 <body>
 <th:block th:replace="~{layout::header}"></th:block>
-<div class="container" th:if="${not #lists.isEmpty(cart.cartItems)}">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1><i class="bi bi-cart3 me-2"></i>Giỏ Hàng Của Bạn</h1>
-        </div>
+
+<!-- Cart Contents -->
+<div class="container my-4" th:if="${not #lists.isEmpty(cart.cartItems)}">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+            <li class="breadcrumb-item active">Giỏ hàng</li>
+        </ol>
+    </nav>
+    
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <h1 class="page-title">
+            <i class="bi bi-cart3 me-2"></i>Giỏ Hàng Của Bạn
+        </h1>
+        <p class="section-subtitle">
+            Bạn có <strong th:text="${cart.cartItems.size()}"></strong> sản phẩm trong giỏ hàng
+        </p>
     </div>
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-            <tr>
-                <th scope="col"><i class="bi bi-hash me-1"></i>ID</th>
-                <th scope="col"><i class="bi bi-book me-1"></i>Tên Sách</th>
-                <th scope="col"><i class="bi bi-123 me-1"></i>Số Lượng</th>
-                <th scope="col"><i class="bi bi-currency-dollar me-1"></i>Giá</th>
-                <th scope="col"><i class="bi bi-calculator me-1"></i>Tổng</th>
-                <th scope="col"><i class="bi bi-gear me-1"></i>Thao Tác</th>
-            </tr>
-            </thead>
-        <tbody>
-        <tr th:each="item : ${cart.cartItems}">
-            <td th:text="${item.getBookId()}"></td>
-            <td th:text="${item.getBookName()}"></td>
-            <td>
-                <label>
-                    <input type="number" min="1"
-                           th:value="${item.getQuantity()}"
-                           th:attr="data-id=${item.getBookId()}"
-                           class="form-control quantity">
-                </label>
-            </td>
-            <td th:text="${item.getPrice()}"></td>
-            <td th:text="${item.getPrice() * item.getQuantity()}"></td>
-            <td>
-                <a class="btn btn-danger btn-sm"
-                   th:href="@{/cart/removeFromCart/{id}(id=${item.getBookId()})}">
-                    <i class="bi bi-trash me-1"></i>Xóa
-                </a>
-            </td>
-        </tr>
-            </tbody>
-        </table>
-    </div>
-    <div class="card mt-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-12 text-end mb-3">
-                    <h3 class="text-primary">
-                        <i class="bi bi-wallet2 me-2"></i>Tổng Cộng: 
-                        <span class="fw-bold" th:text="${totalPrice}"></span>
-                    </h3>
+    
+    <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="cart-item" th:each="item : ${cart.cartItems}">
+                <div class="row align-items-center">
+                    <!-- Product Image -->
+                    <div class="col-auto">
+                        <img th:src="${item.bookImage}" 
+                             class="cart-item-image" 
+                             alt="Book"
+                             onerror="this.src='/images/books/default-book.svg'">
+                    </div>
+                    
+                    <!-- Product Info -->
+                    <div class="col">
+                        <h3 class="cart-item-title" th:text="${item.getBookName()}"></h3>
+                        <div class="cart-item-price">
+                            <span th:text="${#numbers.formatDecimal(item.getPrice(), 0, 'COMMA', 0, 'POINT')}"></span>đ
+                        </div>
+                    </div>
+                    
+                    <!-- Quantity Control -->
+                    <div class="col-auto">
+                        <div class="quantity-control">
+                            <label for="qty" style="display: none;">Số lượng</label>
+                            <input type="number" 
+                                   id="qty"
+                                   min="1" 
+                                   th:value="${item.getQuantity()}"
+                                   th:attr="data-id=${item.getBookId()}"
+                                   class="form-control quantity-input quantity">
+                        </div>
+                        <div class="mt-2 text-muted" style="font-size: 0.875rem;">
+                            Tổng: <strong th:text="${#numbers.formatDecimal(item.getPrice() * item.getQuantity(), 0, 'COMMA', 0, 'POINT')}"></strong>đ
+                        </div>
+                    </div>
+                    
+                    <!-- Remove Button -->
+                    <div class="col-auto">
+                        <a class="btn btn-danger"
+                           th:href="@{/cart/removeFromCart/{id}(id=${item.getBookId()})}">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="col-md-12 text-center">
-                    <a class="btn btn-success btn-lg me-2"
-                       th:href="@{/cart/checkout}">
+            </div>
+        </div>
+        
+        <!-- Cart Summary -->
+        <div class="col-lg-4">
+            <div class="cart-summary">
+                <h3 class="cart-summary-title">Tóm Tắt Đơn Hàng</h3>
+                
+                <div class="cart-summary-row">
+                    <span class="cart-summary-label">Tạm tính:</span>
+                    <span class="cart-summary-value">
+                        <span th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')}"></span>đ
+                    </span>
+                </div>
+                
+                <div class="cart-summary-row">
+                    <span class="cart-summary-label">Phí vận chuyển:</span>
+                    <span class="cart-summary-value text-success">Miễn phí</span>
+                </div>
+                
+                <div class="cart-summary-row">
+                    <span class="cart-summary-label">Tổng cộng:</span>
+                    <span class="cart-summary-value cart-summary-total">
+                        <span th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')}"></span>đ
+                    </span>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <a class="btn btn-accent btn-lg" th:href="@{/cart/checkout}">
                         <i class="bi bi-credit-card me-2"></i>Thanh Toán
                     </a>
-                    <a class="btn btn-danger btn-lg"
-                       th:href="@{/cart/clearCart}">
+                    <a class="btn btn-outline-primary" href="/books">
+                        <i class="bi bi-arrow-left me-2"></i>Tiếp Tục Mua Sắm
+                    </a>
+                    <a class="btn btn-outline-danger" th:href="@{/cart/clearCart}">
                         <i class="bi bi-trash me-2"></i>Xóa Giỏ Hàng
                     </a>
                 </div>
@@ -75,22 +241,25 @@
         </div>
     </div>
 </div>
-<div class="container" th:if="${#lists.isEmpty(cart.cartItems)}">
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card text-center empty-state">
-                <div class="card-body py-5">
-                    <i class="bi bi-cart-x" style="font-size: 5rem; color: #9CA3AF; margin-bottom: 1.5rem;"></i>
-                    <h3 class="mb-3">Giỏ Hàng Trống</h3>
-                    <p class="lead text-muted mb-4">Bạn chưa có sản phẩm nào trong giỏ hàng</p>
-                    <a class="btn btn-primary btn-lg" href="/books">
-                        <i class="bi bi-journal-text me-2"></i>Xem Danh Sách Sách
+
+<!-- Empty Cart -->
+<div class="container my-5" th:if="${#lists.isEmpty(cart.cartItems)}">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card empty-state">
+                <div class="card-body">
+                    <i class="bi bi-cart-x"></i>
+                    <h3>Giỏ Hàng Trống</h3>
+                    <p class="lead">Bạn chưa có sản phẩm nào trong giỏ hàng</p>
+                    <a class="btn btn-primary btn-lg mt-3" href="/books">
+                        <i class="bi bi-book me-2"></i>Khám Phá Sách Ngay
                     </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <th:block th:replace="~{layout::footer}"></th:block>
 <script th:src="@{/js/cart.js}"></script>
 </body>

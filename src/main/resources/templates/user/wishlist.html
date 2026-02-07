@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Danh sách yêu thích</title>
+    <th:block th:replace="~{layout::link-css}"></th:block>
+    <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
+    <style>
+        .wishlist-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 100%;
+        }
+        .wishlist-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            background: white;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .remove-btn:hover {
+            background: #dc3545;
+            color: white;
+            transform: scale(1.1);
+        }
+        .star-rating {
+            color: #ddd;
+            font-size: 0.9em;
+        }
+        .star-rating .filled {
+            color: #ffc107;
+        }
+        .book-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 0.375rem 0.375rem 0 0;
+        }
+        .book-title-link {
+            text-decoration: none;
+            color: #0d6efd;
+            font-weight: 500;
+        }
+        .book-title-link:hover {
+            text-decoration: underline;
+            color: #0a58ca;
+        }
+        .empty-wishlist {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-wishlist i {
+            font-size: 5em;
+            color: #dee2e6;
+        }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{layout::header}"></th:block>
+
+<div class="container my-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-2">
+                <i class="bi bi-heart-fill text-danger me-2"></i>
+                Danh sách yêu thích
+            </h1>
+            <p class="text-muted" th:if="${!#lists.isEmpty(wishlist)}">
+                Bạn có <strong th:text="${#lists.size(wishlist)}"></strong> sách trong danh sách yêu thích
+            </p>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${#lists.isEmpty(wishlist)}" class="empty-wishlist">
+        <i class="bi bi-heart"></i>
+        <h3 class="mt-3 mb-2">Danh sách yêu thích của bạn đang trống</h3>
+        <p class="text-muted mb-4">Hãy thêm những cuốn sách bạn yêu thích để mua sau</p>
+        <a href="/books" class="btn btn-primary">
+            <i class="bi bi-search me-2"></i>Khám phá sách
+        </a>
+    </div>
+
+    <!-- Wishlist Items -->
+    <div class="row" th:if="${!#lists.isEmpty(wishlist)}">
+        <div class="col-md-3 col-sm-6 mb-4" th:each="item : ${wishlist}">
+            <div class="card wishlist-card shadow-sm position-relative">
+                <!-- Remove Button -->
+                <button class="remove-btn border-0"
+                        th:data-book-id="${item.book.id}"
+                        th:data-book-title="${item.book.title}"
+                        onclick="removeFromWishlist(this)"
+                        title="Xóa khỏi danh sách yêu thích">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+
+                <!-- Book Image -->
+                <a th:href="@{/books/{id}(id=${item.book.id})}">
+                    <img th:src="${item.book.imageUrl}" 
+                         class="book-image card-img-top" 
+                         th:alt="${item.book.title}"
+                         onerror="this.src='/images/books/default-book.svg'">
+                </a>
+
+                <div class="card-body">
+                    <!-- Book Title -->
+                    <h6 class="card-title mb-2">
+                        <a th:href="@{/books/{id}(id=${item.book.id})}"
+                           th:text="${item.book.title}"
+                           class="book-title-link"
+                           th:title="${item.book.title}">
+                        </a>
+                    </h6>
+
+                    <!-- Author -->
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-person me-1"></i>
+                        <span th:text="${item.book.author}"></span>
+                    </p>
+
+                    <!-- Price -->
+                    <h5 class="text-danger mb-2">
+                        <strong th:text="${#numbers.formatDecimal(item.book.price, 0, 'COMMA', 0, 'POINT')} + ' đ'"></strong>
+                    </h5>
+
+                    <!-- Rating -->
+                    <div class="star-rating mb-2" th:if="${item.book.averageRating != null}">
+                        <span th:each="i : ${#numbers.sequence(1, 5)}"
+                              th:classappend="${i <= item.book.averageRating} ? 'filled' : ''">
+                            ★
+                        </span>
+                        <small class="text-muted ms-1" th:text="'(' + ${item.book.totalReviews} + ')'"></small>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div class="mb-3">
+                        <span th:if="${item.book.stock > 0}" class="badge bg-success small">
+                            <i class="bi bi-check-circle me-1"></i>Còn <span th:text="${item.book.stock}"></span> quyển
+                        </span>
+                        <span th:if="${item.book.stock == 0}" class="badge bg-danger small">
+                            <i class="bi bi-x-circle me-1"></i>Hết hàng
+                        </span>
+                    </div>
+
+                    <!-- Add to Cart Button -->
+                    <form th:if="${item.book.stock > 0}"
+                          th:action="@{/books/add-to-cart}"
+                          method="post"
+                          class="mb-2">
+                        <input type="hidden" name="id" th:value="${item.book.id}">
+                        <input type="hidden" name="name" th:value="${item.book.title}">
+                        <input type="hidden" name="price" th:value="${item.book.price}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-cart-plus me-1"></i>Thêm vào giỏ
+                        </button>
+                    </form>
+
+                    <button th:if="${item.book.stock == 0}"
+                            class="btn btn-secondary btn-sm w-100 mb-2"
+                            disabled>
+                        <i class="bi bi-bag-x me-1"></i>Hết hàng
+                    </button>
+
+                    <!-- View Details Button -->
+                    <a th:href="@{/books/{id}(id=${item.book.id})}"
+                       class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-eye me-1"></i>Xem chi tiết
+                    </a>
+
+                    <!-- Added Date -->
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-calendar-plus me-1"></i>
+                            Đã thêm: <span th:text="${#dates.format(item.addedDate, 'dd/MM/yyyy')}"></span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{layout::footer}"></th:block>
+
+<script th:inline="javascript">
+function removeFromWishlist(btn) {
+    const bookId = btn.getAttribute('data-book-id');
+    const bookTitle = btn.getAttribute('data-book-title');
+
+    if (!confirm('Bạn có chắc muốn xóa "' + bookTitle + '" khỏi danh sách yêu thích?')) {
+        return;
+    }
+
+    // Get CSRF token
+    const token = /*[[${_csrf.token}]]*/ '';
+    const header = /*[[${_csrf.headerName}]]*/ '';
+
+    fetch(`/wishlist/remove/${bookId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            [header]: token
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showToast(data.message, 'success');
+            
+            // Update wishlist count in navbar
+            updateWishlistCount(data.count);
+            
+            // Reload page after a short delay
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+        } else {
+            showToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Có lỗi xảy ra khi xóa sách', 'error');
+    });
+}
+
+function updateWishlistCount(count) {
+    const countBadge = document.getElementById('wishlistCount');
+    if (countBadge) {
+        countBadge.textContent = count;
+    }
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+        color: white;
+        padding: 15px 25px;
+        border-radius: 5px;
+        z-index: 9999;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        animation: slideIn 0.3s ease-out;
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Add animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>

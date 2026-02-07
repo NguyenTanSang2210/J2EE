@@ -9,6 +9,7 @@
     <title th:text="${book.title} + ' - Chi tiết sách'"></title>
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
     <style>
         /* Star Rating Display */
         .star-rating { 
@@ -59,6 +60,27 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+        
+        .wishlist-btn-detail {
+            padding: 10px 20px;
+            border: 2px solid #dc3545;
+            background: white;
+            color: #dc3545;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+        }
+        .wishlist-btn-detail:hover {
+            background: #dc3545;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+        .wishlist-btn-detail.active {
+            background: #dc3545;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -87,8 +109,25 @@
     <!-- Book Details -->
     <div class="row mb-5">
         <div class="col-md-4">
-            <div class="book-image">
-                <h1 style="font-size: 120px;">📚</h1>
+            <div class="text-center">
+                <img th:src="${book.imageUrl}" 
+                     class="img-fluid rounded shadow-lg book-detail-image"
+                     style="max-height: 500px; width: 100%; object-fit: cover; cursor: pointer;"
+                     th:alt="${book.title}"
+                     onclick="showFullImageModal(this)">
+                
+                <!-- Thông tin nguồn ảnh -->
+                <div class="mt-2 text-muted small">
+                    <span th:if="${book.imageUrl != null and book.imageUrl.startsWith('http')}" class="text-info">
+                        🌐 Ảnh từ link online
+                    </span>
+                    <span th:if="${book.imageUrl != null and !book.imageUrl.startsWith('http') and !book.imageUrl.contains('default-book.jpg')}" class="text-success">
+                        📁 Ảnh tải lên
+                    </span>
+                    <span th:if="${book.imageUrl == null or book.imageUrl.contains('default-book.svg')}" class="text-secondary">
+                        🖼️ Ảnh mặc định
+                    </span>
+                </div>
             </div>
         </div>
         <div class="col-md-8">
@@ -137,13 +176,22 @@
                 <input type="hidden" name="id" th:value="${book.id}">
                 <input type="hidden" name="name" th:value="${book.title}">
                 <input type="hidden" name="price" th:value="${book.price}">
-                <div class="input-group mb-3" style="max-width: 300px;">
+                <div class="input-group mb-3" style="max-width: 400px;">
                     <input type="number" name="quantity" class="form-control" value="1" min="1" th:max="${book.stock}">
                     <button class="btn btn-primary" type="submit">
                         <i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ
                     </button>
                 </div>
             </form>
+            
+            <!-- Wishlist button -->
+            <button sec:authorize="isAuthenticated()"
+                    class="wishlist-btn-detail wishlist-btn mb-3"
+                    th:data-book-id="${book.id}"
+                    onclick="toggleWishlist(this)">
+                <span class="heart-icon">♡</span>
+                <span class="ms-2">Thêm vào yêu thích</span>
+            </button>
             
             <div sec:authorize="!isAuthenticated()" class="alert alert-info">
                 <i class="bi bi-info-circle me-2"></i>
@@ -325,6 +373,69 @@
     </div>
 </div>
 
+<!-- Modal hiển thị ảnh full size -->
+<div class="modal fade" id="fullImageModal" tabindex="-1" aria-labelledby="fullImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fullImageModalLabel">Hình ảnh sách</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="modalFullImage" src="" class="img-fluid" style="max-height: 80vh; width: auto;" alt="Book Full Image">
+            </div>
+            <div class="modal-footer">
+                <div id="modalImageInfo" class="text-muted small me-auto"></div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <th:block th:replace="~{layout::footer}"></th:block>
+
+<!-- JavaScript cho image modal và xử lý lỗi ảnh -->
+<script>
+    // Hiển thị modal ảnh full size
+    function showFullImageModal(imgElement) {
+        const modal = new bootstrap.Modal(document.getElementById('fullImageModal'));
+        const modalImage = document.getElementById('modalFullImage');
+        const modalTitle = document.getElementById('fullImageModalLabel');
+        const modalInfo = document.getElementById('modalImageInfo');
+        
+        modalImage.src = imgElement.src;
+        modalTitle.textContent = imgElement.alt || 'Hình ảnh sách';
+        
+        // Hiển thị thông tin ảnh
+        if (imgElement.src.includes('http')) {
+            modalInfo.textContent = '🌐 Ảnh từ link online: ' + imgElement.src;
+        } else if (imgElement.src.includes('default-book.svg')) {
+            modalInfo.textContent = '🖼️ Ảnh mặc định của hệ thống';
+        } else {
+            modalInfo.textContent = '📁 Ảnh tải lên từ admin';
+        }
+        
+        modal.show();
+    }
+    
+    // Xử lý lỗi load ảnh
+    document.addEventListener('DOMContentLoaded', function() {
+        const bookImage = document.querySelector('.book-detail-image');
+        if (bookImage) {
+            bookImage.onerror = function() {
+                this.src = '/images/books/default-book.svg';
+                this.style.opacity = '0.8';
+                this.title = 'Ảnh gốc không tải được - Hiển thị ảnh mặc định';
+                
+                // Cập nhật thông tin nguồn ảnh
+                const sourceInfo = this.parentElement.querySelector('.small');
+                if (sourceInfo) {
+                    sourceInfo.innerHTML = '<span class="text-warning">⚠️ Ảnh gốc lỗi - Dùng ảnh mặc định</span>';
+                }
+            };
+        }
+    });
+</script>
+
 </body>
 </html>

@@ -7,97 +7,443 @@
 
 ---
 
-## 📊 PHẦN I: PHÂN TÍCH HIỆN TRẠNG
+## 📊 PHẦN I: PHÂN TÍCH HIỆN TRẠNG (Cập nhật 07/02/2026)
 
-### 1.1. Các chức năng đã triển khai
+### 1.1. Các chức năng đã triển khai ✅
 
-#### ✅ Quản lý Sách (Book Management)
-- CRUD đầy đủ: Thêm, sửa, xóa, xem danh sách sách
-- Phân trang (pagination) và sắp xếp
-- Entity: Book (id, title, author, price, category_id)
-- Repository: IBookRepository với JPA
-- Controller: BookController với các endpoint cơ bản
+#### ✅ Hệ thống Quản lý Sách (Book Management) - HOÀN THÀNH
+- **CRUD đầy đủ**: Thêm, sửa, xóa, xem danh sách sách với validation  
+- **Phân trang và sắp xếp**: Hỗ trợ phân trang, sắp xếp theo nhiều tiêu chí
+- **Entity Book**: id, title, author, price, category, stock, isAvailable, reviews
+- **Trang chi tiết sách**: Hiển thị thông tin chi tiết với đánh giá
+- **Quản lý kho**: Tự động cập nhật stock khi bán hàng, cảnh báo hết hàng
 
-#### ✅ Phân loại Sách (Category Management)
-- Entity Category với quan hệ OneToMany với Book
-- Hiển thị sách theo từng danh mục
-- Service: CategoryService
+#### ✅ Tìm kiếm & Lọc Nâng cao - HOÀN THÀNH  
+- **Tìm kiếm từ khóa**: Theo tên sách và tác giả
+- **Lọc nâng cao**: Theo danh mục, khoảng giá  
+- **Sắp xếp linh hoạt**: Theo tên, giá, tác giả (tăng/giảm dần)
+- **SearchDTO**: Đầy đủ các tiêu chí tìm kiếm
+- **UI Filter Sidebar**: Giao diện lọc trực quan
 
-#### ✅ Giỏ hàng (Shopping Cart)
-- Thêm sách vào giỏ hàng (session-based)
-- Cập nhật số lượng
-- Xóa sản phẩm khỏi giỏ
-- Xóa toàn bộ giỏ hàng
-- Service: CartService
-- Entity: Item (DTO cho cart items)
+#### ✅ Hệ thống Đơn hàng & Thanh toán - HOÀN THÀNH
+- **Quản lý Invoice**: Entity với đầy đủ fields (status, payment_method, address, phone, note)
+- **Chu trình đơn hàng**: PENDING → PROCESSING → COMPLETED/CANCELLED  
+- **Lịch sử đơn hàng**: User xem được danh sách và chi tiết đơn hàng
+- **Thanh toán tích hợp**: SePay QR Code payment với webhook
+- **Hủy đơn hàng**: User có thể hủy đơn PENDING
+- **Admin quản lý**: Cập nhật trạng thái đơn hàng
 
-#### ✅ Xác thực và Phân quyền (Authentication & Authorization)
-- Đăng ký tài khoản mới
-- Đăng nhập local (username/password)
-- Đăng nhập OAuth2 với Google
-- Spring Security với BCrypt password encoder
-- Phân quyền User và Role
-- JWT configuration (secret, expiration)
+#### ✅ Giỏ hàng (Shopping Cart) - HOÀN THÀNH
+- **Session-based cart**: Giỏ hàng không cần đăng nhập
+- **CRUD cart items**: Thêm, cập nhật số lượng, xóa sản phẩm
+- **Checkout flow**: Form thông tin giao hàng và thanh toán
+- **Validation stock**: Kiểm tra số lượng tồn kho trước khi checkout
 
-#### ✅ Entities Database
+#### ✅ Hệ thống Đánh giá (Review System) - HOÀN THÀNH  
+- **Entity Review**: rating (1-5 stars), comment, reviewDate
+- **Kiểm soát quyền**: Chỉ cho phép review sách đã mua
+- **Tính toán rating**: Average rating và tổng số review cho mỗi sách
+- **UI đánh giá**: Hiển thị sao và form đánh giá trong trang chi tiết  
+- **Phân trang reviews**: Danh sách review có phân trang
+
+#### ✅ Wishlist (Danh sách yêu thích) - HOÀN THÀNH
+- **Entity Wishlist**: Unique constraint user-book
+- **Toggle wishlist**: AJAX add/remove khỏi wishlist  
+- **UI tích hợp**: Heart button trong danh sách và chi tiết sách
+- **Trang wishlist**: Hiển thị tất cả sách yêu thích của user
+
+#### ✅ Xác thực và Phân quyền - HOÀN THÀNH
+- **Đăng nhập đa dạng**: Form login + OAuth2 Google 
+- **Spring Security**: BCrypt password encoder
+- **Phân quyền**: USER/ADMIN với @PreAuthorize
+- **Session management**: Persistent login
+
+#### ✅ Admin Dashboard & Thống kê - HOÀN THÀNH
+- **Dashboard tổng quan**: Thống kê doanh thu, đơn hàng, user, sách
+- **Biểu đồ**: Revenue by month, Order status distribution
+- **Best selling books**: Top sách bán chạy  
+- **Recent orders**: Đơn hàng gần đây
+- **Quản lý user**: CRUD users
+- **Quản lý đơn hàng**: Cập nhật trạng thái
+- **Quản lý kho**: Nhập thêm stock, cảnh báo hết hàng
+
+#### ✅ Entities Database - HOÀN THÀNH
 - **User**: id, username, password, email, phone, provider, roles
-- **Role**: id, name, description (implements GrantedAuthority)
-- **Book**: id, title, author, price, category
+- **Role**: id, name, description  
+- **Book**: id, title, author, price, category, stock, isAvailable
 - **Category**: id, name
-- **Invoice**: id, invoiceDate, price, user_id (Entity đã có nhưng chưa sử dụng)
-- **ItemInvoice**: id, quantity, book_id, invoice_id (Entity đã có nhưng chưa sử dụng)
+- **Invoice**: id, invoiceDate, price, status, paymentMethod, address, phone, note, paymentStatus, transactionCode, qrCodeUrl
+- **ItemInvoice**: id, quantity, book_id, invoice_id
+- **Review**: id, rating, comment, reviewDate, user_id, book_id  
+- **Wishlist**: id, user_id, book_id, addedDate
 
-### 1.2. Hạn chế và vấn đề cần khắc phục
+### 1.2. Chức năng chưa triển khai (Cần bổ sung) ❌
 
-#### ❌ Chức năng chưa hoàn thiện
-1. **Invoice không được sử dụng**: Entity Invoice và ItemInvoice đã tạo nhưng chưa có controller/service để xử lý
-2. **Không có lịch sử đơn hàng**: User không thể xem các đơn đã đặt
-3. **Checkout chưa hoàn chỉnh**: Chỉ có endpoint `/cart/checkout` nhưng chưa xử lý logic tạo đơn
-4. **Không có quản lý kho**: Không theo dõi số lượng sách tồn kho
-5. **Tìm kiếm hạn chế**: Chỉ có method `searchBook()` cơ bản
-6. **Không có trang chi tiết sách**: Chưa có view để xem thông tin chi tiết
-7. **Admin dashboard thiếu**: Chưa có giao diện quản trị tổng quan
+#### ❌ Hệ thống Hình ảnh Sách (ƯU TIÊN CAO ⭐⭐⭐)
+- **Book Entity thiếu image field**: Không có trường lưu URL/path hình ảnh
+- **File Upload**: Chưa có controller xử lý tải lên hình ảnh
+- **Static Resources**: Chưa có thư mục images trong static  
+- **Image Display**: Template hiện chỉ hiển thị emoji 📚 thay cho ảnh thật
+- **Image Validation**: Chưa validate định dạng/kích thước ảnh
 
-#### ❌ Trải nghiệm người dùng
-- Không có filter nâng cao (theo giá, category)
-- Không có sắp xếp linh hoạt
-- Không có đánh giá/review sách
-- Không có wishlist
-- Không có thông báo khi đặt hàng thành công
+#### ❌ Tính năng mở rộng khác
 
-#### ❌ Quản lý và báo cáo
-- Không có thống kê doanh thu
-- Không có báo cáo sách bán chạy
-- Không có quản lý user từ admin
-- Không có xuất báo cáo Excel/PDF
-
----
-
-## 🎯 PHẦN II: KẾ HOẠCH PHÁT TRIỂN CHI TIẾT
-
-### GIAI ĐOẠN 1: HOÀN THIỆN CORE FEATURES (Ưu tiên cao ⭐⭐⭐)
+#### ❌ Tính năng mở rộng khác
+- **Email Notifications**: Không có gửi email xác nhận đơn hàng
+- **Export Reports**: Chưa có xuất báo cáo Excel/PDF
+- **User Profile Management**: User chưa thể chỉnh sửa thông tin cá nhân
+- **Category Images**: Danh mục chưa có hình ảnh minh họa
+- **Advanced Analytics**: Dashboard có thời gian thống kê limited
+- **Product Recommendations**: Chưa có gợi ý sách liên quan
+- **Coupon/Discount System**: Chưa có hệ thống giảm giá
+- **Delivery Tracking**: Chưa tích hợp tracking đơn vận chuyển
 
 ---
 
-## 📦 CHỨC NĂNG 1: QUẢN LÝ HÓA ĐƠN & LỊCH SỬ MUA HÀNG
+## 🎯 PHẦN II: KẾ HOẠCH PHÁT TRIỂN ƯU TIÊN (Cập nhật)
+
+### CHỨC NĂNG ƯU TIÊN SỐ 1: HỆ THỐNG HÌNH ẢNH SÁCH (⭐⭐⭐)
 
 ### 🎯 Mục tiêu
-Hoàn thiện quy trình mua hàng từ giỏ hàng đến đơn hàng, cho phép user theo dõi lịch sử và trạng thái đơn hàng.
+Thêm khả năng upload và hiển thị hình ảnh cho sách, nâng cao trải nghiệm người dùng và tính chuyên nghiệp của hệ thống.
 
 ### 📋 Yêu cầu chi tiết
 
-#### 1.1. Backend Implementation
+#### 1.1. Database Changes
 
-**A. Cập nhật Entity Invoice**
+**A. Cập nhật Book Entity**
 ```java
-// File: src/main/java/nhom2/QLS/entities/Invoice.java
-// Thêm các trường:
-- status: String (PENDING, PROCESSING, COMPLETED, CANCELLED)
-- paymentMethod: String (COD, BANKING, CREDIT_CARD)
-- shippingAddress: String
-- phone: String
-- note: String
+// File: src/main/java/nhom2/QLS/entities/Book.java
+// Thêm field:
+
+@Column(name = "image_url", length = 500)
+@Size(max = 500, message = "Image URL must be less than 500 characters")
+private String imageUrl;
+
+// Thêm default image cho sách chưa có ảnh
+public String getImageUrl() {
+    return (imageUrl != null && !imageUrl.isEmpty()) ? imageUrl : "/images/books/default-book.jpg";
+}
 ```
+
+**B. Database Migration**
+```sql
+-- Chạy SQL để thêm column vào bảng book:
+ALTER TABLE book ADD COLUMN image_url VARCHAR(500);
+
+-- Update existing books với default image path:
+UPDATE book SET image_url = '/images/books/default-book.jpg' WHERE image_url IS NULL;
+```
+
+#### 1.2. Backend Implementation
+
+**A. Tạo FileUploadService**
+```java
+// File: src/main/java/nhom2/QLS/services/FileUploadService.java
+
+@Service
+public class FileUploadService {
+    private final String uploadDir = "src/main/resources/static/images/books/";
+    
+    public String uploadBookImage(MultipartFile file) throws IOException {
+        // Validate file type (jpg, jpeg, png)
+        // Validate file size (max 5MB)  
+        // Generate unique filename
+        // Save to static/images/books/
+        // Return relative URL path
+    }
+    
+    public boolean deleteBookImage(String imageUrl) {
+        // Delete file from filesystem
+    }
+    
+    private boolean isValidImageFile(MultipartFile file) {
+        // Check MIME type and extension
+    }
+}
+```
+
+**B. Cập nhật BookController**
+```java  
+// File: src/main/java/nhom2/QLS/controllers/BookController.java
+// Thêm fields và methods:
+
+private final FileUploadService fileUploadService;
+
+@PostMapping("/add")
+public String addBook(
+    @Valid @ModelAttribute("book") Book book,
+    @RequestParam("imageFile") MultipartFile imageFile,
+    BindingResult bindingResult,
+    Model model
+) {
+    if (!imageFile.isEmpty()) {
+        try {
+            String imageUrl = fileUploadService.uploadBookImage(imageFile);
+            book.setImageUrl(imageUrl);
+        } catch (IOException e) {
+            model.addAttribute("error", "Upload ảnh thất bại: " + e.getMessage());
+            return "book/add";
+        }
+    }
+    // ... existing code
+}
+
+@PostMapping("/edit")  
+public String editBook(
+    @Valid @ModelAttribute("book") Book book,
+    @RequestParam("imageFile") MultipartFile imageFile,
+    BindingResult bindingResult,
+    Model model
+) {
+    // Handle image upload for edit
+    // If new image uploaded, delete old image và upload new
+    // ... existing code
+}
+```
+
+#### 1.3. Frontend Implementation
+
+**A. Tạo thư mục Static Images**
+```bash
+# Tạo cấu trúc thư mục:
+src/main/resources/static/images/
+├── books/
+│   ├── default-book.jpg    # Ảnh mặc định
+│   └── [uploaded images]   # Ảnh sách tải lên
+└── categories/
+    └── [future category images]
+```
+
+**B. Cập nhật Form Add/Edit Book**
+```html
+<!-- File: src/main/resources/templates/book/add.html -->
+<!-- Thêm sau trường Category:
+
+<div class="mb-4">
+    <label class="form-label" for="imageFile">
+        <i class="bi bi-image me-1"></i>Hình ảnh sách:
+    </label>
+    <input class="form-control" type="file" 
+           id="imageFile" name="imageFile"
+           accept="image/jpeg,image/jpg,image/png"
+           onchange="previewImage(this)">
+    <div class="form-text">
+        Chọn file JPG, JPEG hoặc PNG. Kích thước tối đa 5MB.
+    </div>
+    
+    <!-- Image Preview -->
+    <div class="mt-3">
+        <img id="imagePreview" src="/images/books/default-book.jpg" 
+             class="img-thumbnail" style="width: 200px; height: 250px; object-fit: cover;">
+    </div>
+</div>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('imagePreview').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+-->
+```
+
+**C. Cập nhật Form Edit Book** 
+```html  
+<!-- File: src/main/resources/templates/book/edit.html -->
+<!-- Tương tự add.html nhưng hiển thị ảnh hiện tại:
+
+<div class="mb-4">
+    <label class="form-label" for="imageFile">
+        <i class="bi bi-image me-1"></i>Hình ảnh sách:
+    </label>
+    <input class="form-control" type="file" 
+           id="imageFile" name="imageFile"
+           accept="image/jpeg,image/jpg,image/png"
+           onchange="previewImage(this)">
+    <div class="form-text">
+        Để trống nếu không muốn thay đổi ảnh. Chọn file mới để cập nhật.
+    </div>
+    
+    <!-- Current Image Preview -->
+    <div class="mt-3">
+        <img id="imagePreview" th:src="${book.imageUrl}" 
+             class="img-thumbnail" style="width: 200px; height: 250px; object-fit: cover;">
+        <input type="hidden" name="currentImageUrl" th:value="${book.imageUrl}">
+    </div>
+</div>
+-->
+```
+
+**D. Cập nhật Book List Template**
+```html
+<!-- File: src/main/resources/templates/book/list.html -->
+<!-- Thay đổi table để hiển thị ảnh:
+
+<thead class="table-light">
+    <tr>
+        <th><i class="bi bi-image me-1"></i>Ảnh</th>
+        <th><i class="bi bi-hash me-1"></i>ID</th>
+        <th><i class="bi bi-book me-1"></i>Tên Sách</th>
+        <!-- ... các cột khác ... -->
+    </tr>  
+</thead>
+<tbody id="book-table-body">
+    <tr th:each="book : ${books}">
+        <td>
+            <img th:src="${book.imageUrl}" 
+                 class="img-thumbnail" 
+                 style="width: 60px; height: 80px; object-fit: cover;">
+        </td>
+        <td th:text="${book.getId()}"></td>
+        <!-- ... các cột khác ... -->
+    </tr>
+</tbody>
+-->
+```
+
+**E. Cập nhật Book Detail Template**
+```html
+<!-- File: src/main/resources/templates/book/detail.html -->  
+<!-- Thay đổi phần hiển thị ảnh:
+
+<div class="col-md-4">
+    <div class="text-center">
+        <img th:src="${book.imageUrl}" 
+             class="img-fluid rounded shadow-lg"
+             style="max-height: 500px; object-fit: cover;"
+             th:alt="${book.title}">
+    </div>
+</div>
+-->
+```
+
+### ✅ Checklist Implementation
+
+#### Backend Tasks:
+- [ ] Thêm field `imageUrl` vào Book entity
+- [ ] Chạy SQL migration thêm column `image_url` 
+- [ ] Tạo FileUploadService với validation
+- [ ] Cập nhật BookController handle file upload
+- [ ] Thêm error handling cho upload thất bại  
+- [ ] Test upload với các định dạng file khác nhau
+- [ ] Test file size limit validation
+
+#### Frontend Tasks:  
+- [ ] Tạo thư mục `/static/images/books/`
+- [ ] Thêm ảnh mặc định `default-book.jpg`
+- [ ] Cập nhật form add.html với file input
+- [ ] Cập nhật form edit.html với current image preview
+- [ ] Thêm JavaScript preview ảnh trước khi upload
+- [ ] Cập nhật book/list.html hiển thị thumbnail
+- [ ] Cập nhật book/detail.html với ảnh full size
+- [ ] Test responsive design cho ảnh
+
+#### Testing Tasks:
+- [ ] Test upload ảnh khi thêm sách mới
+- [ ] Test thay đổi ảnh khi edit sách  
+- [ ] Test không upload ảnh (dùng default)
+- [ ] Test upload file không hợp lệ
+- [ ] Test upload file quá kích thước
+- [ ] Test hiển thị ảnh trong list và detail
+- [ ] Test delete ảnh cũ khi upload ảnh mới
+
+### 🔄 Luồng hoạt động
+
+#### Flow 1: Admin thêm sách mới với ảnh
+```
+1. Admin vào /books/add
+2. Điền form thông tin sách
+3. Chọn file ảnh → JavaScript preview ảnh
+4. Submit form
+5. BookController.addBook():
+   - Validate book data
+   - FileUploadService.uploadBookImage():
+     * Validate file type & size
+     * Generate unique filename  
+     * Save to /static/images/books/
+     * Return imageUrl
+   - Set book.imageUrl
+   - Save book to database
+6. Redirect → /books (list hiển thị ảnh mới)
+```
+
+#### Flow 2: Admin edit ảnh sách
+```  
+1. Admin click "Sửa" → /books/edit/{id}
+2. Form hiển thị ảnh hiện tại
+3. Chọn file ảnh mới → Preview ảnh mới
+4. Submit form  
+5. BookController.editBook():
+   - Nếu có file mới:
+     * Delete ảnh cũ (nếu không phải default)
+     * Upload ảnh mới
+     * Update imageUrl
+   - Update book info
+6. Redirect → book detail (hiển thị ảnh mới)
+```
+
+#### Flow 3: User xem sách
+```
+1. User vào /books → Thấy thumbnail ảnh trong table
+2. Click vào tên sách → /books/{id}  
+3. Trang detail hiển thị ảnh full size
+4. Ảnh responsive tốt trên mobile/desktop
+```
+
+---
+
+## 📅 PHẦN III: LỘ TRÌNH THỰC HIỆN MỚI
+
+### Sprint 1 (1 tuần): Hệ thống Hình ảnh Sách
+**Mục tiêu**: Hoàn thành tính năng upload và hiển thị ảnh sách
+
+- [ ] **Day 1-2**: Backend Implementation
+  - Cập nhật Book entity và database
+  - Tạo FileUploadService
+  - Cập nhật BookController
+  
+- [ ] **Day 3-4**: Frontend Implementation  
+  - Cập nhật templates add/edit
+  - Thêm JavaScript preview
+  - Tạo static image directories
+  
+- [ ] **Day 5-7**: Testing & Polish
+  - Test tất cả scenarios
+  - Responsive design
+  - Error handling UI
+  - Performance optimization
+
+### Sprint 2 (1 tuần): Tính năng Mở rộng Khác (Tùy chọn)
+**Chọn 1-2 tính năng sau để triển khai:**
+
+- [ ] **Option A**: Email Notifications
+  - Gửi email xác nhận đơn hàng 
+  - Template email HTML
+  - SMTP configuration
+  
+- [ ] **Option B**: User Profile Management
+  - Form chỉnh sửa profile
+  - Change password
+  - Upload avatar
+  
+- [ ] **Option C**: Export Reports  
+  - Export order history Excel
+  - PDF invoice generation
+  - Sales report dashboard
+
+### 🎖️ Tổng kết Hiện trạng
+- **Các tính năng CORE đã hoàn thành**: ✅ 90%
+- **Tính năng còn thiếu quan trọng nhất**: ❌ Hệ thống hình ảnh  
+- **Dự án sẵn sàng production**: 🤔 85% (thiếu ảnh là điểm yếu lớn)
+- **Khuyến nghị**: Ưu tiên triển khai tính năng hình ảnh sách trước khi mở rộng tính năng khác
+
+---
 
 **B. Tạo InvoiceService**
 ```java
@@ -1407,7 +1753,7 @@ public String bookDetail(
 - [ ] Test delete review (owner & admin)
 - [ ] Test pagination reviews
 
----
+---Hoàn thành---
 
 ## ❤️ CHỨC NĂNG 5: WISHLIST (DANH SÁCH YÊU THÍCH)
 

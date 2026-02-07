@@ -42,6 +42,7 @@ public class BookService {
         existingBook.setCategory(book.getCategory());
         existingBook.setStock(book.getStock());
         existingBook.setIsAvailable(book.getIsAvailable());
+        existingBook.setImageUrl(book.getImageUrl()); // FIX: Cập nhật imageUrl
         bookRepository.save(existingBook);
     }
     public void deleteBookById(Long id) {

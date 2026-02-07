@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <th:block th:replace="~{layout::link-css}"></th:block>
+    <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
+</head>
+<body>
+<th:block th:replace="~{layout::header}"></th:block>
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">
+        <i class="bi bi-speedometer2 me-2"></i>Dashboard Quản trị
+    </h2>
+    
+    <!-- Overview Cards -->
+    <div class="row mt-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-currency-dollar me-2"></i>Tổng doanh thu
+                    </h5>
+                    <h3 th:text="${totalRevenue} ? ${totalRevenue} + ' đ' : '0 đ'">0 đ</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-check-circle me-2"></i>Đơn hàng hoàn thành
+                    </h5>
+                    <h3 th:text="${totalOrders} ?: 0">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-people me-2"></i>Tổng người dùng
+                    </h5>
+                    <h3 th:text="${totalUsers} ?: 0">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-book me-2"></i>Tổng sách
+                    </h5>
+                    <h3 th:text="${totalBooks} ?: 0">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Best Selling Books & Recent Orders -->
+    <div class="row mt-4">
+        <!-- Best Selling Books -->
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy me-2"></i>Top 5 sách bán chạy
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sách</th>
+                                    <th>Đã bán</th>
+                                    <th>Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="book : ${bestSellingBooks}">
+                                    <td th:text="${book.bookTitle}">Book Title</td>
+                                    <td th:text="${book.totalSold}">0</td>
+                                    <td th:text="${book.revenue} + ' đ'">0 đ</td>
+                                </tr>
+                                <tr th:if="${bestSellingBooks == null or #lists.isEmpty(bestSellingBooks)}">
+                                    <td colspan="3" class="text-center">Chưa có dữ liệu</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Orders -->
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Đơn hàng gần đây
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Ngày</th>
+                                    <th>Tổng</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${recentOrders}">
+                                    <td th:text="${order.id}">1</td>
+                                    <td th:text="${order.username}">User</td>
+                                    <td th:text="${#dates.format(order.date, 'dd/MM/yyyy')}">01/01/2024</td>
+                                    <td th:text="${order.total} + ' đ'">0 đ</td>
+                                    <td>
+                                        <span th:text="${order.status}" 
+                                              th:class="'badge ' + ${order.status == 'COMPLETED' ? 'bg-success' : 
+                                                             order.status == 'PENDING' ? 'bg-warning' :
+                                                             order.status == 'PROCESSING' ? 'bg-info' : 'bg-danger'}">
+                                            Status
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${recentOrders == null or #lists.isEmpty(recentOrders)}">
+                                    <td colspan="5" class="text-center">Chưa có đơn hàng</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{layout::footer}"></th:block>
+
+</body>
+</html>

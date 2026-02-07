@@ -9,6 +9,7 @@ import nhom2.QLS.repositories.IUserRepository;
 import nhom2.QLS.services.BookService;
 import nhom2.QLS.services.CartService;
 import nhom2.QLS.services.CategoryService;
+import nhom2.QLS.services.FileUploadService;
 import nhom2.QLS.services.ReviewService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.List;
@@ -34,6 +36,7 @@ public class BookController {
     private final CartService cartService;
     private final ReviewService reviewService;
     private final IUserRepository userRepository;
+    private final FileUploadService fileUploadService;
 
     @GetMapping
     public String showAllBooks(@NotNull Model model,
@@ -101,19 +104,34 @@ public class BookController {
     @PostMapping("/add")
     public String addBook(
             @Valid @ModelAttribute("book") Book book,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @NotNull BindingResult bindingResult,
             Model model) {
+        
+        // Validation errors từ binding
         if (bindingResult.hasErrors()) {
             var errors = bindingResult.getAllErrors()
                     .stream()
                     .map(DefaultMessageSourceResolvable::getDefaultMessage).toArray(String[]::new);
             model.addAttribute("errors", errors);
-            model.addAttribute("categories",
-                    categoryService.getAllCategories());
+            model.addAttribute("categories", categoryService.getAllCategories());
             return "book/add";
         }
-        bookService.addBook(book);
-        return "redirect:/books";
+        
+        try {
+            // LOGIC ƯU TIÊN: Link ảnh ưu tiên - Upload file là fallback
+            handleImageUpload(book, imageFile);
+            
+            // Lưu sách vào database
+            bookService.addBook(book);
+            return "redirect:/books";
+            
+        } catch (Exception e) {
+            // Nếu có lỗi xử lý ảnh
+            model.addAttribute("error", "Lỗi xử lý ảnh: " + e.getMessage());
+            model.addAttribute("categories", categoryService.getAllCategories());
+            return "book/add";
+        }
     }
 
     @PostMapping("/add-to-cart")
@@ -121,12 +139,21 @@ public class BookController {
                             @RequestParam long id,
                             @RequestParam String name,
                             @RequestParam double price,
-                            @RequestParam(defaultValue = "1") int
-                                    quantity) {
+                            @RequestParam(defaultValue = "1") int quantity,
+                            @RequestHeader(value = "Referer", required = false) String referer) {
         var cart = cartService.getCart(session);
-        cart.addItems(new Item(id, name, price, quantity));
+        
+        // Lấy imageUrl từ database
+        String imageUrl = bookService.getBookById(id)
+                .map(book -> book.getImageUrl())
+                .orElse(null);
+        
+        Item item = new Item(id, name, price, quantity, imageUrl);
+        cart.addItems(item);
         cartService.updateCart(session, cart);
-        return "redirect:/books";
+        
+        // Redirect về trang trước đó hoặc mặc định về /books
+        return "redirect:" + (referer != null ? referer : "/books");
     }
 
     @GetMapping("/delete/{id}")
@@ -150,21 +177,37 @@ public class BookController {
     }
 
     @PostMapping("/edit")
-    public String editBook(@Valid @ModelAttribute("book") Book book,
-                           @NotNull BindingResult bindingResult,
-                           Model model) {
+    public String editBook(
+            @Valid @ModelAttribute("book") Book book,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            @RequestParam(value = "currentImageUrl", required = false) String currentImageUrl,
+            @NotNull BindingResult bindingResult,
+            Model model) {
+        
+        // Validation errors
         if (bindingResult.hasErrors()) {
             var errors = bindingResult.getAllErrors()
                     .stream()
                     .map(DefaultMessageSourceResolvable::getDefaultMessage)
                     .toArray(String[]::new);
             model.addAttribute("errors", errors);
-            model.addAttribute("categories",
-                    categoryService.getAllCategories());
+            model.addAttribute("categories", categoryService.getAllCategories());
             return "book/edit";
         }
-        bookService.updateBook(book);
-        return "redirect:/books";
+        
+        try {
+            // Xử lý ảnh cho edit: cần xóa ảnh cũ nếu có ảnh mới
+            handleImageEditUpload(book, imageFile, currentImageUrl);
+            
+            // Update sách
+            bookService.updateBook(book);
+            return "redirect:/books";
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi cập nhật ảnh: " + e.getMessage());
+            model.addAttribute("categories", categoryService.getAllCategories());
+            return "book/edit";
+        }
     }
 
     @GetMapping("/search")
@@ -185,6 +228,73 @@ public class BookController {
         
         return "book/list";
     }
+
+    // ==================== PRIVATE HELPER METHODS ====================
+    
+    /**
+     * Xử lý ảnh cho ADD book - Logic ưu tiên: Link ưu tiên, Upload là fallback
+     * 
+     * @param book Sách cần xử lý ảnh
+     * @param imageFile File upload (có thể null)
+     * @throws Exception nếu có lỗi upload
+     */
+    private void handleImageUpload(Book book, MultipartFile imageFile) throws Exception {
+        String imageUrl = book.getImageUrl(); // Lấy từ form input
+        
+        // Case 1: Có link ảnh → Dùng link, BỎ QUA upload file
+        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            book.setImageUrl(imageUrl.trim());
+            return; // Kết thúc ngay, không upload file
+        }
+        
+        // Case 2: Không có link NHƯNG có file upload → Upload file
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String uploadedUrl = fileUploadService.uploadBookImage(imageFile);
+            book.setImageUrl(uploadedUrl);
+            return;
+        }
+        
+        // Case 3: Cả hai đều trống → Set null, getter sẽ trả default
+        book.setImageUrl(null);
+    }
+    
+    /**
+     * Xử lý ảnh cho EDIT book - Phức tạp hơn vì cần xóa ảnh cũ
+     * 
+     * @param book Sách cần edit
+     * @param imageFile File upload mới (có thể null) 
+     * @param currentImageUrl Ảnh hiện tại của sách
+     * @throws Exception nếu có lỗi
+     */
+    private void handleImageEditUpload(Book book, MultipartFile imageFile, String currentImageUrl) throws Exception {
+        String newImageUrl = book.getImageUrl(); // Link mới từ form
+        
+        // Case 1: Có link mới → Dùng link, xóa ảnh upload cũ nếu có
+        if (newImageUrl != null && !newImageUrl.trim().isEmpty()) {
+            // Xóa ảnh upload cũ (chỉ xóa local upload, không xóa external URL)
+            if (currentImageUrl != null && !fileUploadService.isExternalUrl(currentImageUrl)) {
+                fileUploadService.deleteBookImage(currentImageUrl);
+            }
+            
+            book.setImageUrl(newImageUrl.trim());
+            return;
+        }
+        
+        // Case 2: Không có link mới NHƯNG có file upload → Upload file mới, xóa ảnh cũ
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Upload file mới trước
+            String uploadedUrl = fileUploadService.uploadBookImage(imageFile);
+            
+            // Xóa ảnh cũ sau khi upload thành công (chỉ xóa local upload)
+            if (currentImageUrl != null && !fileUploadService.isExternalUrl(currentImageUrl)) {
+                fileUploadService.deleteBookImage(currentImageUrl);
+            }
+            
+            book.setImageUrl(uploadedUrl);
+            return;
+        }
+        
+        // Case 3: Cả hai trống → Giữ ảnh hiện tại
+        book.setImageUrl(currentImageUrl);
+    }
 }
-
-

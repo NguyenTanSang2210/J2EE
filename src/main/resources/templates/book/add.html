@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <th:block th:replace="~{layout::link-css}"></th:block>
     <th:block th:replace="~{layout::custom-css}"></th:block>
+    <th:block th:replace="~{layout::icons-and-fonts}"></th:block>
     <title>Thêm Sách Mới</title>
 </head>
 <body>
@@ -16,7 +17,7 @@
             <div class="card">
                 <div class="card-body">
                     <h1 class="text-center mb-4"><i class="bi bi-plus-circle me-2"></i>Thêm Sách Mới</h1>
-                    <form th:action="@{/books/add}" th:object="${book}" method="post">
+                    <form th:action="@{/books/add}" th:object="${book}" method="post" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label class="form-label" for="title">
                                 <i class="bi bi-book me-1"></i>Tên Sách: <span class="text-danger">*</span>
@@ -69,6 +70,50 @@
                             <span class="text-danger" th:if="${#fields.hasErrors('stock')}"
                                   th:errors="*{stock}"></span>
                         </div>
+                        
+                        <!-- ========== PHẦN HÌNH ẢNH SÁCH ========== -->
+                        <div class="mb-4">
+                            <h5 class="mb-3"><i class="bi bi-image me-2"></i>Hình Ảnh Sách</h5>
+                            
+                            <!-- Input Link Ảnh (Ưu tiên) -->
+                            <div class="mb-3">
+                                <label class="form-label" for="imageUrl">
+                                    <i class="bi bi-link me-1"></i>Link hình ảnh (Ưu tiên):
+                                </label>
+                                <input class="form-control" type="url" 
+                                       th:field="*{imageUrl}" id="imageUrl" 
+                                       placeholder="https://example.com/image.jpg"
+                                       oninput="handleImageUrlInput()">
+                                <div class="form-text">
+                                    <strong>Cách 1:</strong> Nhập link ảnh online (khuyến nghị) - hệ thống sẽ dùng link này và bỏ qua file upload.
+                                </div>
+                            </div>
+                            
+                            <!-- Input File Upload (Fallback) -->
+                            <div class="mb-3">
+                                <label class="form-label" for="imageFile">
+                                    <i class="bi bi-upload me-1"></i>Hoặc tải lên file ảnh:
+                                </label>
+                                <input class="form-control" type="file" 
+                                       id="imageFile" name="imageFile"
+                                       accept="image/jpeg,image/jpg,image/png,image/gif"
+                                       onchange="handleFileInput(this)">
+                                <div class="form-text">
+                                    <strong>Cách 2:</strong> Tải file từ máy tính (chỉ dùng khi không có link). Định dạng: JPG, PNG, GIF. Tối đa 5MB.
+                                </div>
+                            </div>
+                            
+                            <!-- Preview Ảnh -->
+                            <div class="text-center">
+                                <p class="mb-2"><strong>Xem trước:</strong></p>
+                                <img id="imagePreview" src="/images/books/default-book.svg" 
+                                     class="img-thumbnail" 
+                                     style="width: 200px; height: 250px; object-fit: cover;"
+                                     alt="Preview ảnh sách">
+                                <div id="imageSource" class="text-muted mt-1">Ảnh mặc định</div>
+                            </div>
+                        </div>
+                        
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-save me-2"></i>Lưu Sách
@@ -84,5 +129,81 @@
     </div>
 </div>
 <th:block th:replace="~{layout::footer}"></th:block>
+
+<!-- JavaScript xử lý preview ảnh -->
+<script>
+    // Xử lý khi nhập link ảnh
+    function handleImageUrlInput() {
+        const imageUrlInput = document.getElementById('imageUrl');
+        const imageFileInput = document.getElementById('imageFile');
+        const preview = document.getElementById('imagePreview');
+        const source = document.getElementById('imageSource');
+        
+        const imageUrl = imageUrlInput.value.trim();
+        
+        if (imageUrl) {
+            // Có link ảnh → Preview theo link, clear file input
+            preview.src = imageUrl;
+            source.textContent = 'Link online (ưu tiên)';
+            source.className = 'text-success mt-1';
+            
+            // Clear file input vì link có ưu tiên
+            imageFileInput.value = '';
+        } else {
+            // Không có link → Về default
+            preview.src = '/images/books/default-book.svg';
+            source.textContent = 'Ảnh mặc định';
+            source.className = 'text-muted mt-1';
+        }
+    }
+    
+    // Xử lý khi chọn file
+    function handleFileInput(input) {
+        const imageUrlInput = document.getElementById('imageUrl');
+        const preview = document.getElementById('imagePreview');
+        const source = document.getElementById('imageSource');
+        
+        // Nếu có link ảnh thì ưu tiên link, không preview file
+        if (imageUrlInput.value.trim()) {
+            alert('Đã có link ảnh! Hệ thống sẽ ưu tiên dùng link và bỏ qua file upload.');
+            input.value = ''; // Clear file
+            return;
+        }
+        
+        // Preview file nếu không có link
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File quá lớn! Tối đa 5MB.');
+                input.value = '';
+                return;
+            }
+            
+            // Preview file
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                source.textContent = 'File upload (' + file.name + ')';
+                source.className = 'text-info mt-1';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Không có file → Về default
+            preview.src = '/images/books/default-book.svg';
+            source.textContent = 'Ảnh mặc định';
+            source.className = 'text-muted mt-1';
+        }
+    }
+    
+    // Xử lý lỗi load ảnh (nếu link không hợp lệ)
+    document.getElementById('imagePreview').onerror = function() {
+        this.src = '/images/books/default-book.svg';
+        document.getElementById('imageSource').textContent = 'Link không hợp lệ - Dùng ảnh mặc định';
+        document.getElementById('imageSource').className = 'text-warning mt-1';
+    };
+</script>
+
 </body>
 </html>

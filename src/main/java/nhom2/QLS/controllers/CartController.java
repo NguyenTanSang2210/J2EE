@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/cart")
@@ -53,6 +56,15 @@ public class CartController {
     public String clearCart(HttpSession session) {
         cartService.removeCart(session);
         return "redirect:/cart ";
+    }
+    
+    @GetMapping("/count")
+    @ResponseBody
+    public Map<String, Object> getCartCount(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        int count = cartService.getSumQuantity(session);
+        response.put("count", count);
+        return response;
     }
 
     @GetMapping("/checkout")
